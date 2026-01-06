@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto-Open Browser on Server Start - Implementation Plan</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    .code-block {
+      background: #1e293b;
+      color: #e2e8f0;
+    }
+    .code-block .keyword { color: #c084fc; }
+    .code-block .string { color: #4ade80; }
+    .code-block .function { color: #60a5fa; }
+    .code-block .comment { color: #64748b; }
+    .code-block .operator { color: #f472b6; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-slate-800 to-slate-900 text-white py-8 px-4 shadow-lg">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Auto-Open Browser on Server Start</h1>
+          <p class="text-slate-300 mt-1 text-sm sm:text-base">Technical Implementation Plan</p>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-slate-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <time datetime="2026-01-06">January 6, 2026</time>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <!-- Overview Section -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-slate-100 px-6 py-4 border-b border-slate-200">
+        <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Overview
+        </h2>
+      </div>
+      <div class="p-6">
+        <p class="text-slate-600 leading-relaxed">
+          Add Vite-like browser auto-open functionality when the development or CLI server starts. 
+          This enhances developer experience by automatically launching the browser to the correct URL, 
+          reducing friction in the development workflow.
+        </p>
+      </div>
+    </section>
+
+    <!-- Goals Section -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-slate-100 px-6 py-4 border-b border-slate-200">
+        <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Goals
+        </h2>
+      </div>
+      <div class="p-6">
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-medium">1</span>
+            <span class="text-slate-600">Automatically open the default browser when servers start</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-medium">2</span>
+            <span class="text-slate-600">Support both development server (<code class="bg-slate-100 px-1.5 py-0.5 rounded text-sm font-mono">ui/index.ts</code>) and CLI production server (<code class="bg-slate-100 px-1.5 py-0.5 rounded text-sm font-mono">cli/server.ts</code>)</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-medium">3</span>
+            <span class="text-slate-600">Provide a <code class="bg-slate-100 px-1.5 py-0.5 rounded text-sm font-mono">--no-open</code> flag for CLI to disable auto-open behavior</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-medium">4</span>
+            <span class="text-slate-600">Cross-platform support (macOS, Windows, Linux)</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Files to Create Section -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-slate-100 px-6 py-4 border-b border-slate-200">
+        <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+          </svg>
+          Files to Create
+        </h2>
+      </div>
+      <div class="p-6 space-y-6">
+        <!-- New File Card -->
+        <div class="border border-slate-200 rounded-lg overflow-hidden">
+          <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <code class="font-mono text-sm font-medium text-slate-700">cli/open-browser.ts</code>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+              New File
+            </span>
+          </div>
+          <div class="p-4">
+            <p class="text-slate-600 text-sm mb-4">
+              Cross-platform utility function to open URLs in the default browser. Uses native OS commands: 
+              <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">open</code> (macOS), 
+              <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">start</code> (Windows), 
+              <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">xdg-open</code> (Linux).
+              Uses <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">Bun.spawn()</code> with stdout/stderr ignored.
+            </p>
+            <div class="code-block rounded-lg p-4 overflow-x-auto">
+              <pre class="text-sm font-mono leading-relaxed"><span class="keyword">export function</span> <span class="function">openBrowser</span>(url: <span class="keyword">string</span>): <span class="keyword">void</span> {
+  <span class="keyword">const</span> command = process.platform <span class="operator">===</span> <span class="string">"darwin"</span>
+    <span class="operator">?</span> <span class="string">"open"</span>
+    <span class="operator">:</span> process.platform <span class="operator">===</span> <span class="string">"win32"</span>
+      <span class="operator">?</span> <span class="string">"start"</span>
+      <span class="operator">:</span> <span class="string">"xdg-open"</span>;
+
+  Bun.<span class="function">spawn</span>([command, url], {
+    stdout: <span class="string">"ignore"</span>,
+    stderr: <span class="string">"ignore"</span>,
+  });
+}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Files to Modify Section -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-slate-100 px-6 py-4 border-b border-slate-200">
+        <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          Files to Modify
+        </h2>
+      </div>
+      <div class="p-6 space-y-6">
+        <!-- Modified File 1 -->
+        <div class="border border-slate-200 rounded-lg overflow-hidden">
+          <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <code class="font-mono text-sm font-medium text-slate-700">cli/index.ts</code>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+              Modified
+            </span>
+          </div>
+          <div class="p-4">
+            <ul class="text-slate-600 text-sm space-y-2">
+              <li class="flex items-start gap-2">
+                <span class="text-slate-400 mt-1">-</span>
+                Add <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">open</code> option to <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">parseArgs</code> configuration
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-slate-400 mt-1">-</span>
+                Support <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">--no-open</code> flag (negated boolean)
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-slate-400 mt-1">-</span>
+                Pass <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">open</code> value to <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">startServer()</code> function
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Modified File 2 -->
+        <div class="border border-slate-200 rounded-lg overflow-hidden">
+          <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <code class="font-mono text-sm font-medium text-slate-700">cli/server.ts</code>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+              Modified
+            </span>
+          </div>
+          <div class="p-4">
+            <ul class="text-slate-600 text-sm space-y-2">
+              <li class="flex items-start gap-2">
+                <span class="text-slate-400 mt-1">-</span>
+                Update <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">startServer</code> signature to accept <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">open</code> parameter
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-slate-400 mt-1">-</span>
+                New signature: <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">startServer(filePath: string, port = 3000, open = true)</code>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-slate-400 mt-1">-</span>
+                Import <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">openBrowser</code> from <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">./open-browser</code>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-slate-400 mt-1">-</span>
+                Call <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">openBrowser()</code> after server starts (if <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">open</code> is true)
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Modified File 3 -->
+        <div class="border border-slate-200 rounded-lg overflow-hidden">
+          <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <code class="font-mono text-sm font-medium text-slate-700">ui/index.ts</code>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+              Modified
+            </span>
+          </div>
+          <div class="p-4">
+            <ul class="text-slate-600 text-sm space-y-2">
+              <li class="flex items-start gap-2">
+                <span class="text-slate-400 mt-1">-</span>
+                Import <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">openBrowser</code> from <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">../cli/open-browser</code>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-slate-400 mt-1">-</span>
+                Call <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">openBrowser()</code> after server starts
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Usage Examples Section -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-slate-100 px-6 py-4 border-b border-slate-200">
+        <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          Usage Examples
+        </h2>
+      </div>
+      <div class="p-6">
+        <div class="code-block rounded-lg p-4 overflow-x-auto">
+          <pre class="text-sm font-mono leading-relaxed"><span class="comment"># Development - auto-opens browser</span>
+bun dev
+
+<span class="comment"># CLI - auto-opens browser (default)</span>
+iaee run experience.json
+
+<span class="comment"># CLI - disable auto-open</span>
+iaee run experience.json --no-open</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Design Decisions Section -->
+    <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-slate-100 px-6 py-4 border-b border-slate-200">
+        <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+          Design Decisions
+        </h2>
+      </div>
+      <div class="p-6">
+        <div class="space-y-4">
+          <div class="flex gap-4 p-4 bg-slate-50 rounded-lg">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-semibold text-sm">1</div>
+            <div>
+              <h3 class="font-medium text-slate-800">Shared utility in <code class="bg-slate-200 px-1.5 py-0.5 rounded text-sm">cli/</code> folder</h3>
+              <p class="text-slate-600 text-sm mt-1">Since there's no existing <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">lib/</code> folder and this is CLI-focused, keeping it in <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">cli/</code> is pragmatic</p>
+            </div>
+          </div>
+          <div class="flex gap-4 p-4 bg-slate-50 rounded-lg">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-semibold text-sm">2</div>
+            <div>
+              <h3 class="font-medium text-slate-800">Default to open</h3>
+              <p class="text-slate-600 text-sm mt-1">Following Vite's convention, auto-open is enabled by default</p>
+            </div>
+          </div>
+          <div class="flex gap-4 p-4 bg-slate-50 rounded-lg">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-semibold text-sm">3</div>
+            <div>
+              <h3 class="font-medium text-slate-800"><code class="bg-slate-200 px-1.5 py-0.5 rounded text-sm">--no-open</code> flag</h3>
+              <p class="text-slate-600 text-sm mt-1">Negated flag pattern (vs <code class="bg-slate-100 px-1 py-0.5 rounded text-xs">--open</code>) because opening is the default behavior</p>
+            </div>
+          </div>
+          <div class="flex gap-4 p-4 bg-slate-50 rounded-lg">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-semibold text-sm">4</div>
+            <div>
+              <h3 class="font-medium text-slate-800">No server readiness check</h3>
+              <p class="text-slate-600 text-sm mt-1"><code class="bg-slate-100 px-1 py-0.5 rounded text-xs">Bun.serve()</code> is synchronous, so the server is ready immediately</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Summary Card -->
+    <section class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg p-6 text-white">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div class="flex-shrink-0 w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-lg">Implementation Summary</h3>
+          <p class="text-blue-100 text-sm mt-1">
+            1 new file, 3 modified files. Minimal footprint with maximum developer experience improvement.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-100 border-t border-slate-200 py-6 px-4 mt-12">
+    <div class="max-w-4xl mx-auto text-center text-sm text-slate-500">
+      <p>Technical Implementation Plan - Auto-Open Browser Feature</p>
+    </div>
+  </footer>
+</body>
+</html>

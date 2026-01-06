@@ -108,4 +108,4 @@ For more information, read the Bun API docs in `node_modules/bun-types/docs/**.m
 
 ## Library Documentation
 
-If you have the `task` tool available, then use it to talk to "Doc", the library documentation expert. Doc will provide any information for any library.
+If you need information on a specific library, then Spock is your documentation expert. Spock can provide you with any documentation needs for any library you are working with. He has the will provide any information for any library. Spock can only be accessed with the `task` tool. If you don't have it then ask user or see if there are alternatives.

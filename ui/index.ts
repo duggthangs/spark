@@ -1,4 +1,5 @@
 import index from "./index.html";
+import { openBrowser } from "../cli/open-browser";
 
 const server = Bun.serve({
   routes: {
@@ -12,3 +13,4 @@ const server = Bun.serve({
 });
 
 console.log(`Listening on http://localhost:${server.port}`);
+openBrowser(`http://localhost:${server.port}`);

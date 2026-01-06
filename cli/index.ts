@@ -7,11 +7,16 @@ const { values, positionals } = parseArgs({
   args,
   options: {
     port: {
-      type: 'string',
-      short: 'p',
+      type: "string",
+      short: "p",
+    },
+    open: {
+      type: "boolean",
+      default: true,
     },
   },
   allowPositionals: true,
+  allowNegative: true,
 });
 
 const command = positionals[0];
@@ -24,10 +29,11 @@ async function main() {
       process.exit(1);
     }
     const port = values.port ? parseInt(values.port) : 3000;
-    await startServer(file, port);
+    const open = values.open ?? true;
+    await startServer(file, port, open);
   } else {
     console.log("IAEE CLI");
-    console.log("Usage: iaee run <file> [--port 3000]");
+    console.log("Usage: iaee run <file> [--port 3000] [--no-open]");
     process.exit(1);
   }
 }

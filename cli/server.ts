@@ -1,8 +1,9 @@
 import { join } from "path";
 import { validateExperience } from "../engine/validator";
 import { compileSummary } from "../engine/compiler";
+import { openBrowser } from "./open-browser";
 
-export async function startServer(filePath: string, port = 3000) {
+export async function startServer(filePath: string, port = 3000, open = true) {
   console.log(`Loading experience from: ${filePath}`);
   
   const file = Bun.file(filePath);
@@ -113,4 +114,8 @@ export async function startServer(filePath: string, port = 3000) {
 
   console.log(`IAEE CLI running at http://localhost:${port}`);
   console.log("Press Ctrl+C to exit manually");
+
+  if (open) {
+    openBrowser(`http://localhost:${port}`);
+  }
 }
