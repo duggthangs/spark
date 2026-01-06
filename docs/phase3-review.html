@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan Review: Phase 3</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .option-card {
+            transition: all 0.2s;
+        }
+        .option-card:hover {
+            border-color: #3b82f6;
+        }
+        input[type="radio"]:checked + div {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        /* Style for textareas to look nice */
+        textarea {
+            resize: vertical;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen py-10 text-gray-800">
+
+    <main class="max-w-4xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden">
+        
+        <!-- Header -->
+        <header class="bg-slate-900 text-white p-8">
+            <h1 class="text-3xl font-bold mb-2">Plan Review: Phase 3</h1>
+            <p class="text-slate-300">CLI Runtime & Integration</p>
+        </header>
+
+        <div class="p-8 space-y-10">
+
+            <!-- Context & Goals -->
+            <section class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Context & Goals</h2>
+                <p class="text-sm text-gray-600 mb-4">
+                    The goal is to transform the project from a "library + playground" into a "runnable application". 
+                    The <strong>IAEE CLI</strong> will allow users to run <code>iaee run experience.json</code>, which will start a local server, 
+                    open the browser, and capture the user's interactive session.
+                </p>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h3 class="font-bold text-sm text-gray-700">Key Components</h3>
+                        <ul class="list-disc list-inside text-sm text-gray-600 mt-1">
+                            <li><strong>CLI Entry Point</strong>: <code>bun cli/index.ts</code></li>
+                            <li><strong>Local Server</strong>: <code>Bun.serve</code> (UI + API)</li>
+                        </ul>
+                    </div>
+                    <div>
+                         <h3 class="font-bold text-sm text-gray-700">Objectives</h3>
+                        <ul class="list-disc list-inside text-sm text-gray-600 mt-1">
+                            <li>Serve static UI assets</li>
+                            <li>Expose API for experience JSON</li>
+                            <li>Handle user submission</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 1: CLI Entry Point -->
+            <section>
+                <h2 class="text-xl font-semibold border-b pb-2 mb-4 border-gray-200">Section 1: CLI Entry Point</h2>
+                <p class="text-gray-600 mb-4 text-sm">How should we parse command line arguments?</p>
+                
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <label class="block cursor-pointer h-full">
+                        <input type="radio" name="cli_entry" value="parseArgs" class="peer sr-only" checked>
+                        <div class="option-card p-4 border-2 border-gray-200 rounded-lg h-full">
+                            <div class="flex items-center mb-2">
+                                <div class="w-4 h-4 rounded-full border border-gray-400 mr-2 peer-checked:bg-blue-500 peer-checked:border-blue-500"></div>
+                                <span class="font-bold">Use util.parseArgs</span>
+                            </div>
+                            <p class="text-xs text-gray-600">Native Node/Bun utility. Simple, lightweight, no extra dependencies. Good for simple CLIs.</p>
+                        </div>
+                    </label>
+
+                    <label class="block cursor-pointer h-full">
+                        <input type="radio" name="cli_entry" value="commander" class="peer sr-only">
+                        <div class="option-card p-4 border-2 border-gray-200 rounded-lg h-full">
+                            <div class="flex items-center mb-2">
+                                <div class="w-4 h-4 rounded-full border border-gray-400 mr-2"></div>
+                                <span class="font-bold">Use Commander</span>
+                            </div>
+                            <p class="text-xs text-gray-600">Robust library. Auto-generated help, subcommand support, better error handling. Adds a dependency.</p>
+                        </div>
+                    </label>
+                </div>
+                <textarea id="feedback_cli" class="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" rows="2" placeholder="Additional feedback for Section 1..."></textarea>
+            </section>
+
+            <!-- Section 2: Server Logic -->
+            <section>
+                <h2 class="text-xl font-semibold border-b pb-2 mb-4 border-gray-200">Section 2: Server Logic</h2>
+                <p class="text-gray-600 mb-4 text-sm">How should the server deliver the UI?</p>
+                
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <label class="block cursor-pointer h-full">
+                        <input type="radio" name="server_logic" value="dist" class="peer sr-only" checked>
+                        <div class="option-card p-4 border-2 border-gray-200 rounded-lg h-full">
+                            <div class="flex items-center mb-2">
+                                <div class="w-4 h-4 rounded-full border border-gray-400 mr-2 peer-checked:bg-blue-500 peer-checked:border-blue-500"></div>
+                                <span class="font-bold">Serve ui/dist (Build First)</span>
+                            </div>
+                            <p class="text-xs text-gray-600">Standard approach. UI is pre-built. Server just serves static files. More stable, less runtime overhead.</p>
+                        </div>
+                    </label>
+
+                    <label class="block cursor-pointer h-full">
+                        <input type="radio" name="server_logic" value="source" class="peer sr-only">
+                        <div class="option-card p-4 border-2 border-gray-200 rounded-lg h-full">
+                            <div class="flex items-center mb-2">
+                                <div class="w-4 h-4 rounded-full border border-gray-400 mr-2"></div>
+                                <span class="font-bold">Serve ui/ Source (Runtime)</span>
+                            </div>
+                            <p class="text-xs text-gray-600">Use Bun's transpiler to serve TSX directly. Simpler dev workflow, but might have edge cases in production/CLI usage.</p>
+                        </div>
+                    </label>
+                </div>
+                <textarea id="feedback_server" class="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" rows="2" placeholder="Additional feedback for Section 2..."></textarea>
+            </section>
+
+            <!-- Section 3: UI Integration -->
+            <section>
+                <h2 class="text-xl font-semibold border-b pb-2 mb-4 border-gray-200">Section 3: UI Integration</h2>
+                <p class="text-gray-600 mb-4 text-sm">How should the UI determine whether to use real API data or mock data?</p>
+                
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <label class="block cursor-pointer h-full">
+                        <input type="radio" name="ui_strategy" value="fetch_fallback" class="peer sr-only" checked>
+                        <div class="option-card p-4 border-2 border-gray-200 rounded-lg h-full">
+                            <div class="flex items-center mb-2">
+                                <div class="w-4 h-4 rounded-full border border-gray-400 mr-2 peer-checked:bg-blue-500 peer-checked:border-blue-500"></div>
+                                <span class="font-bold">Fetch or Fallback</span>
+                            </div>
+                            <p class="text-xs text-gray-600">Optimistically try `fetch('/api/experience')`. If it fails (404), use local mock data. Unifies codebase.</p>
+                        </div>
+                    </label>
+
+                    <label class="block cursor-pointer h-full">
+                        <input type="radio" name="ui_strategy" value="explicit_mode" class="peer sr-only">
+                        <div class="option-card p-4 border-2 border-gray-200 rounded-lg h-full">
+                            <div class="flex items-center mb-2">
+                                <div class="w-4 h-4 rounded-full border border-gray-400 mr-2"></div>
+                                <span class="font-bold">Explicit Mode</span>
+                            </div>
+                            <p class="text-xs text-gray-600">Server injects a flag (e.g., `window.IAEE_MODE`). UI checks flag to decide. More deterministic.</p>
+                        </div>
+                    </label>
+                </div>
+                <textarea id="feedback_ui" class="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" rows="2" placeholder="Additional feedback for Section 3..."></textarea>
+            </section>
+
+            <!-- Section 4: Shutdown Mechanism -->
+            <section>
+                <h2 class="text-xl font-semibold border-b pb-2 mb-4 border-gray-200">Section 4: Shutdown Mechanism</h2>
+                <p class="text-gray-600 mb-4 text-sm">What happens after the user submits their data?</p>
+                
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <label class="block cursor-pointer h-full">
+                        <input type="radio" name="shutdown_strategy" value="exit_immediately" class="peer sr-only" checked>
+                        <div class="option-card p-4 border-2 border-gray-200 rounded-lg h-full">
+                            <div class="flex items-center mb-2">
+                                <div class="w-4 h-4 rounded-full border border-gray-400 mr-2 peer-checked:bg-blue-500 peer-checked:border-blue-500"></div>
+                                <span class="font-bold">Immediate Exit</span>
+                            </div>
+                            <p class="text-xs text-gray-600">Print result to stdout and `process.exit(0)`. Browser page may hang.</p>
+                        </div>
+                    </label>
+
+                    <label class="block cursor-pointer h-full">
+                        <input type="radio" name="shutdown_strategy" value="keep_alive" class="peer sr-only">
+                        <div class="option-card p-4 border-2 border-gray-200 rounded-lg h-full">
+                            <div class="flex items-center mb-2">
+                                <div class="w-4 h-4 rounded-full border border-gray-400 mr-2"></div>
+                                <span class="font-bold">Keep Alive (Thank You Page)</span>
+                            </div>
+                            <p class="text-xs text-gray-600">Return success page. Server stays running until Ctrl+C. Better UX for user confirmation.</p>
+                        </div>
+                    </label>
+                </div>
+                <textarea id="feedback_shutdown" class="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" rows="2" placeholder="Additional feedback for Section 4..."></textarea>
+            </section>
+
+            <!-- Section 5: End-to-End Test -->
+            <section>
+                <h2 class="text-xl font-semibold border-b pb-2 mb-4 border-gray-200">Section 5: End-to-End Test</h2>
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+                    <h3 class="font-bold text-sm text-gray-700 mb-2">Proposed Strategy</h3>
+                    <ul class="list-disc list-inside text-sm text-gray-600">
+                        <li>Create `examples/demo.json`.</li>
+                        <li>Run `bun cli/index.ts run examples/demo.json`.</li>
+                        <li>Verify browser opens and interaction works.</li>
+                        <li>Verify submission prints data to stdout.</li>
+                    </ul>
+                </div>
+                <textarea id="feedback_test" class="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" rows="2" placeholder="Feedback for testing strategy..."></textarea>
+            </section>
+
+            <!-- Feedback Generation -->
+            <section class="mt-8 pt-8 border-t border-gray-200">
+                <button onclick="generateInstructions()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-200 mb-6">
+                    Generate Final Instructions
+                </button>
+
+                <div id="output-section" class="hidden">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Copy this snippet to the chat:</label>
+                    <div class="relative">
+                        <textarea id="markdown-output" class="w-full h-96 p-4 font-mono text-sm bg-slate-800 text-green-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" readonly></textarea>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        function generateInstructions() {
+            // Section 1: CLI
+            const cliEntry = document.querySelector('input[name="cli_entry"]:checked').value;
+            const cliFeedback = document.getElementById('feedback_cli').value.trim();
+            let cliText = cliEntry === "parseArgs" 
+                ? "**CLI Entry Point**: Use `util.parseArgs` for simplicity and minimal dependencies." 
+                : "**CLI Entry Point**: Use `commander` for better argument handling and help generation.";
+            if (cliFeedback) cliText += `\n  - *Feedback*: ${cliFeedback}`;
+
+            // Section 2: Server
+            const serverLogic = document.querySelector('input[name="server_logic"]:checked').value;
+            const serverFeedback = document.getElementById('feedback_server').value.trim();
+            let serverText = serverLogic === "dist"
+                ? "**Server Logic**: Serve from `ui/dist`. We will run a build step before starting the CLI."
+                : "**Server Logic**: Serve `ui/` source directly. Use Bun's runtime transpilation capabilities.";
+            if (serverFeedback) serverText += `\n  - *Feedback*: ${serverFeedback}`;
+
+            // Section 3: UI
+            const uiStrategy = document.querySelector('input[name="ui_strategy"]:checked').value;
+            const uiFeedback = document.getElementById('feedback_ui').value.trim();
+            let uiText = uiStrategy === "fetch_fallback"
+                ? "**UI Integration**: Use 'Fetch or Fallback'. `fetch('/api/experience')` on mount, fallback to mocks on 404."
+                : "**UI Integration**: Use 'Explicit Mode'. Check for injected global flag/window variable.";
+            if (uiFeedback) uiText += `\n  - *Feedback*: ${uiFeedback}`;
+
+            // Section 4: Shutdown
+            const shutdownStrategy = document.querySelector('input[name="shutdown_strategy"]:checked').value;
+            const shutdownFeedback = document.getElementById('feedback_shutdown').value.trim();
+            let shutdownText = shutdownStrategy === "exit_immediately"
+                ? "**Shutdown**: Exit immediately after printing result. `process.exit(0)`."
+                : "**Shutdown**: Keep alive after submission. Show a 'Thank You' message and wait for user termination.";
+            if (shutdownFeedback) shutdownText += `\n  - *Feedback*: ${shutdownFeedback}`;
+
+            // Section 5: Test
+            const testFeedback = document.getElementById('feedback_test').value.trim();
+            let testText = "**End-to-End Test**: Proceed with the proposed testing strategy.";
+            if (testFeedback) testText += `\n  - *Feedback*: ${testFeedback}`;
+
+            const markdown = `Here is the feedback for the Phase 3 Plan:
+
+## Decisions & Reviews
+
+1. ${cliText}
+2. ${serverText}
+3. ${uiText}
+4. ${shutdownText}
+5. ${testText}
+
+## Approval
+The plan is **APPROVED** with the above directives. Please proceed with implementation.`;
+
+            document.getElementById('markdown-output').value = markdown;
+            document.getElementById('output-section').classList.remove('hidden');
+            
+            // Auto scroll to result
+            document.getElementById('output-section').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

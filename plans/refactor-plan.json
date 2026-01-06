@@ -1,0 +1,69 @@
+{
+  "id": "refactor-quality-pass",
+  "title": "Refactoring & Quality Pass",
+  "description": "Decision-making for the v0.1 stabilization and cleanup phase.",
+  "sections": [
+    {
+      "id": "context",
+      "type": "info",
+      "title": "Overview",
+      "content": "Jake has identified 5 key areas to improve maintainability and consistency. Please choose the preferred strategy for each."
+    },
+    {
+      "id": "engine-sync",
+      "type": "choice",
+      "title": "1. Engine Registry Sync",
+      "description": "Registry is currently missing several section types.",
+      "options": [
+        { "id": "complete", "label": "Complete sync for all 12 section types" },
+        { "id": "partial", "label": "Only sync currently prototyped types" }
+      ]
+    },
+    {
+      "id": "mock-centralization",
+      "type": "choice",
+      "title": "2. Mock Data Centralization",
+      "description": "Fallback data is currently scattered across component files.",
+      "options": [
+        { "id": "app-tsx", "label": "Move everything to App.tsx" },
+        { "id": "mocks-ts", "label": "Create a new dedicated ui/mocks.ts file" }
+      ]
+    },
+    {
+      "id": "compiler-types",
+      "type": "choice",
+      "title": "3. Compiler Type Safety",
+      "description": "Refactor compiler.ts to remove unsafe 'as any' casts.",
+      "options": [
+        { "id": "exhaustive", "label": "Use exhaustive switch checks" },
+        { "id": "type-guards", "label": "Use discriminated union type guards" }
+      ]
+    },
+    {
+      "id": "mapping-standard",
+      "type": "choice",
+      "title": "4. Data Mapping Standardization",
+      "description": "Improve the transformation pass in App.tsx.",
+      "options": [
+        { "id": "standardize", "label": "Standardize component output schemas" },
+        { "id": "registry", "label": "Add a centralized Mapping Registry utility" }
+      ]
+    },
+    {
+      "id": "cleanup-logic",
+      "type": "choice",
+      "title": "5. CLI Build Cleanup",
+      "description": "Automatically clean ui/dist to avoid stale artifacts.",
+      "options": [
+        { "id": "build-script", "label": "Add 'rm -rf' to the package.json build script" },
+        { "id": "server-logic", "label": "Add a programmatic clean step in cli/server.ts" }
+      ]
+    },
+    {
+      "id": "conclusion",
+      "type": "decision",
+      "title": "Final Approval",
+      "message": "Once approved, Jake will execute the selected refactoring strategies."
+    }
+  ]
+}

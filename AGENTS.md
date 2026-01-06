@@ -101,3 +101,11 @@ bun --hot ./index.ts
 ```
 
 For more information, read the Bun API docs in `node_modules/bun-types/docs/**.md`.
+
+## Git
+
+- Do not automatically add or commit anything to git unless the user explicitly asks to. User needs to review the changes.
+
+## Library Documentation
+
+If you have the `task` tool available, then use it to talk to "Doc", the library documentation expert. Doc will provide any information for any library.

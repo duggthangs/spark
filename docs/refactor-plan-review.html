@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refactoring & Quality Pass Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html { scroll-behavior: smooth; }
+        textarea::-webkit-scrollbar { width: 8px; }
+        textarea::-webkit-scrollbar-track { background: #f1f5f9; }
+        textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        textarea::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased selection:bg-indigo-100 selection:text-indigo-700">
+
+    <div class="max-w-4xl mx-auto px-6 py-12 sm:py-20">
+        
+        <!-- Hero Section -->
+        <header class="text-center mb-16">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-700 text-xs font-medium uppercase tracking-wider mb-6">
+                <span>Status: Under Review</span>
+                <span class="w-1 h-1 rounded-full bg-amber-400"></span>
+                <span>Auditor: Jake</span>
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900 mb-4">
+                Refactoring & Quality Pass
+            </h1>
+            <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                Jake's audit identified 4 key areas to improve maintainability and type safety. Review the proposed tasks and select your preferred implementation strategies.
+            </p>
+        </header>
+
+        <form id="refactorReviewForm" class="space-y-12">
+            
+            <!-- 1. Engine Sync -->
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/50">
+                    <h2 class="text-lg font-semibold text-slate-900">1. Engine Sync</h2>
+                    <p class="text-sm text-slate-500 mt-1">Sync <code>registry.ts</code> with all 12 section types.</p>
+                </div>
+                <div class="p-8 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 transition-colors">
+                            <input type="radio" name="engineSync" value="Complete sync now" class="sr-only" checked>
+                            <span class="flex flex-1 flex-col">
+                                <span class="block text-sm font-medium text-slate-900">Complete sync now</span>
+                                <span class="mt-1 text-xs text-slate-500">Register all 12 types immediately.</span>
+                            </span>
+                            <svg class="h-5 w-5 text-indigo-600 opacity-0 check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            <div class="absolute -inset-px rounded-xl border-2 border-transparent border-ring"></div>
+                        </label>
+                        <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 transition-colors">
+                            <input type="radio" name="engineSync" value="Only sync prototyped types" class="sr-only">
+                            <span class="flex flex-1 flex-col">
+                                <span class="block text-sm font-medium text-slate-900">Only sync prototyped types</span>
+                                <span class="mt-1 text-xs text-slate-500">Keep registry lean for now.</span>
+                            </span>
+                            <svg class="h-5 w-5 text-indigo-600 opacity-0 check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            <div class="absolute -inset-px rounded-xl border-2 border-transparent border-ring"></div>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Feedback</label>
+                        <textarea name="engineSyncFeedback" placeholder="Additional thoughts on engine synchronization..." class="w-full rounded-xl border-slate-200 text-sm focus:ring-indigo-500 focus:border-indigo-500 min-h-[80px] p-3"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Mock Data Centralization -->
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/50">
+                    <h2 class="text-lg font-semibold text-slate-900">2. Mock Data Centralization</h2>
+                    <p class="text-sm text-slate-500 mt-1">Move fallback data from components to <code>MOCK_SECTIONS</code>.</p>
+                </div>
+                <div class="p-8 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 transition-colors">
+                            <input type="radio" name="mockData" value="Move to App.tsx" class="sr-only" checked>
+                            <span class="flex flex-1 flex-col">
+                                <span class="block text-sm font-medium text-slate-900">Move to App.tsx</span>
+                                <span class="mt-1 text-xs text-slate-500">Keep core data in the main entry point.</span>
+                            </span>
+                            <svg class="h-5 w-5 text-indigo-600 opacity-0 check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            <div class="absolute -inset-px rounded-xl border-2 border-transparent border-ring"></div>
+                        </label>
+                        <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 transition-colors">
+                            <input type="radio" name="mockData" value="Create a new ui/mocks.ts" class="sr-only">
+                            <span class="flex flex-1 flex-col">
+                                <span class="block text-sm font-medium text-slate-900">Create a new ui/mocks.ts</span>
+                                <span class="mt-1 text-xs text-slate-500">Modular approach for cleaner code.</span>
+                            </span>
+                            <svg class="h-5 w-5 text-indigo-600 opacity-0 check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            <div class="absolute -inset-px rounded-xl border-2 border-transparent border-ring"></div>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Feedback</label>
+                        <textarea name="mockDataFeedback" placeholder="Additional thoughts on mock data organization..." class="w-full rounded-xl border-slate-200 text-sm focus:ring-indigo-500 focus:border-indigo-500 min-h-[80px] p-3"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Compiler Type Safety -->
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/50">
+                    <h2 class="text-lg font-semibold text-slate-900">3. Compiler Type Safety</h2>
+                    <p class="text-sm text-slate-500 mt-1">Refactor <code>compiler.ts</code> to remove <code>as any</code>.</p>
+                </div>
+                <div class="p-8 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 transition-colors">
+                            <input type="radio" name="typeSafety" value="Use exhaustive switch check" class="sr-only" checked>
+                            <span class="flex flex-1 flex-col">
+                                <span class="block text-sm font-medium text-slate-900">Use exhaustive switch check</span>
+                                <span class="mt-1 text-xs text-slate-500">Ensure every type is handled by the compiler.</span>
+                            </span>
+                            <svg class="h-5 w-5 text-indigo-600 opacity-0 check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            <div class="absolute -inset-px rounded-xl border-2 border-transparent border-ring"></div>
+                        </label>
+                        <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 transition-colors">
+                            <input type="radio" name="typeSafety" value="Use discriminated union type guards" class="sr-only">
+                            <span class="flex flex-1 flex-col">
+                                <span class="block text-sm font-medium text-slate-900">Use discriminated union type guards</span>
+                                <span class="mt-1 text-xs text-slate-500">Functional approach using type predicates.</span>
+                            </span>
+                            <svg class="h-5 w-5 text-indigo-600 opacity-0 check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            <div class="absolute -inset-px rounded-xl border-2 border-transparent border-ring"></div>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Feedback</label>
+                        <textarea name="typeSafetyFeedback" placeholder="Additional thoughts on type safety strategy..." class="w-full rounded-xl border-slate-200 text-sm focus:ring-indigo-500 focus:border-indigo-500 min-h-[80px] p-3"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Data Mapping Standardization -->
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/50">
+                    <h2 class="text-lg font-semibold text-slate-900">4. Data Mapping Standardization</h2>
+                    <p class="text-sm text-slate-500 mt-1">Improve the <code>handleSubmit</code> logic in <code>App.tsx</code>.</p>
+                </div>
+                <div class="p-8 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 transition-colors">
+                            <input type="radio" name="mapping" value="Standardize component output schemas" class="sr-only" checked>
+                            <span class="flex flex-1 flex-col">
+                                <span class="block text-sm font-medium text-slate-900">Standardize component output schemas</span>
+                                <span class="mt-1 text-xs text-slate-500">Enforce consistency at the component level.</span>
+                            </span>
+                            <svg class="h-5 w-5 text-indigo-600 opacity-0 check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            <div class="absolute -inset-px rounded-xl border-2 border-transparent border-ring"></div>
+                        </label>
+                        <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 transition-colors">
+                            <input type="radio" name="mapping" value="Add a Mapping Registry utility" class="sr-only">
+                            <span class="flex flex-1 flex-col">
+                                <span class="block text-sm font-medium text-slate-900">Add a Mapping Registry utility</span>
+                                <span class="mt-1 text-xs text-slate-500">Centralized transformation layer.</span>
+                            </span>
+                            <svg class="h-5 w-5 text-indigo-600 opacity-0 check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            <div class="absolute -inset-px rounded-xl border-2 border-transparent border-ring"></div>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Feedback</label>
+                        <textarea name="mappingFeedback" placeholder="Additional thoughts on data mapping..." class="w-full rounded-xl border-slate-200 text-sm focus:ring-indigo-500 focus:border-indigo-500 min-h-[80px] p-3"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. CLI Build Cleanup -->
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/50">
+                    <h2 class="text-lg font-semibold text-slate-900">5. CLI Build Cleanup</h2>
+                    <p class="text-sm text-slate-500 mt-1">Automatically clean <code>ui/dist</code>.</p>
+                </div>
+                <div class="p-8 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 transition-colors">
+                            <input type="radio" name="buildCleanup" value="Add rm -rf to build script" class="sr-only" checked>
+                            <span class="flex flex-1 flex-col">
+                                <span class="block text-sm font-medium text-slate-900">Add rm -rf to build script</span>
+                                <span class="mt-1 text-xs text-slate-500">Simple and effective via package.json.</span>
+                            </span>
+                            <svg class="h-5 w-5 text-indigo-600 opacity-0 check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            <div class="absolute -inset-px rounded-xl border-2 border-transparent border-ring"></div>
+                        </label>
+                        <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 transition-colors">
+                            <input type="radio" name="buildCleanup" value="Add a clean step in cli/server.ts" class="sr-only">
+                            <span class="flex flex-1 flex-col">
+                                <span class="block text-sm font-medium text-slate-900">Add a clean step in cli/server.ts</span>
+                                <span class="mt-1 text-xs text-slate-500">Programmatic control within the CLI.</span>
+                            </span>
+                            <svg class="h-5 w-5 text-indigo-600 opacity-0 check-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                            <div class="absolute -inset-px rounded-xl border-2 border-transparent border-ring"></div>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Feedback</label>
+                        <textarea name="buildCleanupFeedback" placeholder="Additional thoughts on build cleanup..." class="w-full rounded-xl border-slate-200 text-sm focus:ring-indigo-500 focus:border-indigo-500 min-h-[80px] p-3"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Action Area -->
+            <div class="pt-12 flex flex-col items-center gap-8">
+                <button type="button" onclick="generatePlan()" class="w-full sm:w-auto px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-xl shadow-indigo-200 transition-all transform hover:-translate-y-1 focus:ring-4 focus:ring-indigo-200">
+                    Generate Plan
+                </button>
+                
+                <div id="planResult" class="hidden w-full bg-slate-900 rounded-3xl p-8 shadow-2xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                            <span class="text-sm font-mono text-slate-400">refactor-execution-plan.md</span>
+                        </div>
+                        <button onclick="copyPlan()" class="text-xs font-semibold px-3 py-1 bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors border border-slate-700">Copy to Clipboard</button>
+                    </div>
+                    <textarea id="planOutput" readonly class="w-full h-96 bg-transparent text-slate-300 font-mono text-sm border-0 focus:ring-0 resize-none p-0"></textarea>
+                </div>
+            </div>
+
+        </form>
+
+        <footer class="text-center text-slate-400 text-sm mt-24 pb-12 border-t border-slate-200 pt-12">
+            <p>© 2026 Spark CLI • Generated by opencode</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const inputs = document.querySelectorAll('input[type="radio"]');
+        
+        function updateStyles() {
+            inputs.forEach(input => {
+                const label = input.closest('label');
+                const checkIcon = label.querySelector('.check-icon');
+                const ring = label.querySelector('.border-ring');
+                
+                if (input.checked) {
+                    checkIcon.classList.remove('opacity-0');
+                    ring.classList.add('border-indigo-600');
+                    label.classList.add('bg-indigo-50/30', 'border-indigo-200');
+                } else {
+                    checkIcon.classList.add('opacity-0');
+                    ring.classList.remove('border-indigo-600');
+                    label.classList.remove('bg-indigo-50/30', 'border-indigo-200');
+                }
+            });
+        }
+
+        inputs.forEach(input => input.addEventListener('change', updateStyles));
+        updateStyles();
+
+        function generatePlan() {
+            const form = document.getElementById('refactorReviewForm');
+            const formData = new FormData(form);
+            
+            const tasks = [
+                { id: 'engineSync', title: 'Engine Sync' },
+                { id: 'mockData', title: 'Mock Data Centralization' },
+                { id: 'typeSafety', title: 'Compiler Type Safety' },
+                { id: 'mapping', title: 'Data Mapping Standardization' },
+                { id: 'buildCleanup', title: 'CLI Build Cleanup' }
+            ];
+
+            let markdown = `# Refactoring Execution Plan\n\nGenerated on: ${new Date().toLocaleDateString()}\n\n`;
+
+            tasks.forEach(task => {
+                const choice = formData.get(task.id);
+                const feedback = formData.get(task.id + 'Feedback');
+                markdown += `## ${task.title}\n`;
+                markdown += `- **Decision**: ${choice}\n`;
+                if (feedback && feedback.trim()) {
+                    markdown += `- **Feedback**: ${feedback.trim()}\n`;
+                }
+                markdown += `\n`;
+            });
+
+            const output = document.getElementById('planOutput');
+            const resultArea = document.getElementById('planResult');
+            
+            output.value = markdown;
+            resultArea.classList.remove('hidden');
+            resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function copyPlan() {
+            const output = document.getElementById('planOutput');
+            output.select();
+            document.execCommand('copy');
+            alert('Plan copied to clipboard!');
+        }
+    </script>
+</body>
+</html>

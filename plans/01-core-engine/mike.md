@@ -31,28 +31,43 @@ This plan focuses on **Phase 1: Core Engine & Contracts**. We need to establish 
 
 You are responsible for the `engine/` directory.
 
-1.  **Verify Project Structure**:
-    -   Ensure `package.json` has `zod` installed.
-    -   Ensure `tsconfig.json` is set up for Bun/TypeScript.
+### Layer 1: Skeleton & Mechanics
+*Goal: Prove the system works with a minimal example.*
 
-2.  **Implement Zod Schemas (`engine/schema.ts`)**:
-    -   Define `SectionBaseSchema` with `id`, `type`, `title`, `description`.
-    -   Define specific schemas:
-        -   `InfoSectionSchema`: `content` (string).
-        -   `TextReviewSectionSchema`: `content` (string), output `comment` (string).
-        -   `ChoiceSectionSchema`: `options` (array of `{id, label}`), multi-select support if needed (v0 just single select per spec?), output `selected` (string). *Correction from spec: Spec says `choice` type. Check `init_plan.md` for exact shape.*
-        -   `RankSectionSchema`: `items` (array of `{id, label}`), output `order` (array of ids).
-        -   `DecisionSectionSchema`: output `decision` (approve/reject), `rationale` (string).
-    -   Define `ExperienceSchema`: `title`, `intro` (optional), `sections` (array of Section).
-    -   Export inferred TypeScript types.
+1.  **Project Setup**:
+    -   Ensure `zod` is installed.
+    -   Ensure `tsconfig.json` is configured for Bun.
+2.  **Minimal Schema (`engine/schema.ts`)**:
+    -   Define `SectionBaseSchema` (id, type, title).
+    -   Define only **one** concrete section: `InfoSectionSchema` (type="info", content=string).
+    -   Define `ExperienceSchema` allowing only `InfoSection`.
+3.  **Core Validator (`engine/validator.ts`)**:
+    -   Implement `validateExperience` using Zod's `safeParse`.
+4.  **Validation**:
+    -   Create `tests/engine.test.ts`.
+    -   Test that a simple JSON with just an `InfoSection` passes validation.
 
-3.  **Create Section Registry (`engine/registry.ts`)**:
-    -   Create a mechanism to register these schemas.
-    -   Allow looking up a schema by `type` string.
+### Layer 2: Interactive Types
+*Goal: Add the interactive vocabulary.*
 
-4.  **Implement Validation Logic (`engine/validator.ts`)**:
-    -   Export a function `validateExperience(json: unknown): ValidationResult`.
-    -   Use Zod's `safeParse`.
+1.  **Expand Schema**:
+    -   Add `ChoiceSectionSchema` (options: {id, label}[]).
+    -   Add `RankSectionSchema` (items: {id, label}[]).
+    -   Add `TextReviewSectionSchema` (content).
+    -   Add `DecisionSectionSchema` (final gate).
+2.  **Update Experience**:
+    -   Update `ExperienceSchema` to allow all these section types in the `sections` array.
+3.  **Validation**:
+    -   Add a test case in `tests/engine.test.ts` with a "kitchen sink" experience containing all types.
+
+### Layer 3: Business Logic Constraints
+*Goal: Enforce the "Decision" rule.*
+
+1.  **Refine Validation**:
+    -   Update `ExperienceSchema` (or `validateExperience` logic) to enforce that **exactly one** `DecisionSection` exists.
+2.  **Validation**:
+    -   Add a negative test case: An experience *without* a decision section must fail validation.
+
 
 ## Constraints and Assumptions
 

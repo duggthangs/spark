@@ -1,0 +1,28 @@
+{
+  "id": "demo-exp-1",
+  "title": "CLI Runtime Demo",
+  "description": "Testing the runtime mode.",
+  "sections": [
+    {
+      "id": "sec-1",
+      "type": "live-component",
+      "title": "Live Code",
+      "defaultCode": "<div className='p-4 bg-red-100 text-red-800 rounded'>Warning: CLI Mode Active</div>"
+    },
+    {
+      "id": "sec-2",
+      "type": "image-choice",
+      "title": "Select Theme",
+      "images": [
+        { "id": "theme-dark", "src": "https://placehold.co/600x400/1e293b/ffffff?text=Dark+Mode", "label": "Dark Mode" },
+        { "id": "theme-light", "src": "https://placehold.co/600x400/ffffff/1e293b?text=Light+Mode", "label": "Light Mode" }
+      ]
+    },
+    {
+      "id": "sec-final",
+      "type": "decision",
+      "title": "Completion",
+      "message": "Thanks for testing the CLI. Press Submit to close the server."
+    }
+  ]
+}
