@@ -61,8 +61,8 @@ export default function WizardLayout({
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden relative w-full">
-        <div className="max-w-3xl mx-auto px-6 py-8 min-h-full flex flex-col justify-center">
+      <main className="flex-1 overflow-y-auto overflow-x-auto relative w-full">
+        <div className="px-6 py-8 min-h-full flex flex-col justify-center">
             {children}
         </div>
       </main>

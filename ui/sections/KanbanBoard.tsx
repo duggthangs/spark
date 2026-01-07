@@ -96,8 +96,17 @@ export default function KanbanBoard({ data, value, onChange }: { data?: any, val
   };
 
   return (
-    <div className="h-full">
-      <div className="flex gap-8 h-full overflow-x-auto pb-4">
+    <div className="h-full w-full max-w-[100vw] px-4">
+      {/* Header */}
+      {(data?.title || data?.description) && (
+        <div className="max-w-2xl mx-auto mb-6">
+          {data?.title && <h2 className="text-3xl font-light text-slate-900 mb-2">{data.title}</h2>}
+          {data?.description && <p className="text-slate-500">{data.description}</p>}
+        </div>
+      )}
+      
+      {/* Kanban Board */}
+      <div className="flex gap-6 h-full overflow-x-auto pb-4 justify-center">
         {columns.map(col => (
           <div 
             key={col.id}
