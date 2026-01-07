@@ -11,6 +11,7 @@ import {
   LiveComponentSectionSchema,
   NumericInputsSectionSchema,
   CardDeckSectionSchema,
+  CodeSelectorSectionSchema,
 } from "./schema";
 
 /**
@@ -30,6 +31,7 @@ export const SectionRegistry = {
   "live-component": LiveComponentSectionSchema,
   "numeric-inputs": NumericInputsSectionSchema,
   "card-deck": CardDeckSectionSchema,
+  "code-selector": CodeSelectorSectionSchema,
 } as const;
 
 /**

@@ -1,28 +1,212 @@
 {
-  "id": "demo-exp-1",
-  "title": "CLI Runtime Demo",
-  "description": "Testing the runtime mode.",
+  "id": "demo-experience",
+  "title": "IAEE Prototype",
+  "description": "Production-ready integration test",
   "sections": [
     {
-      "id": "sec-1",
-      "type": "live-component",
-      "title": "Live Code",
-      "defaultCode": "<div className='p-4 bg-red-100 text-red-800 rounded'>Warning: CLI Mode Active</div>"
+      "id": "intro",
+      "type": "info",
+      "title": "Welcome",
+      "content": "This is a centralized mock experience."
     },
     {
-      "id": "sec-2",
-      "type": "image-choice",
-      "title": "Select Theme",
-      "images": [
-        { "id": "theme-dark", "src": "https://placehold.co/600x400/1e293b/ffffff?text=Dark+Mode", "label": "Dark Mode" },
-        { "id": "theme-light", "src": "https://placehold.co/600x400/ffffff/1e293b?text=Light+Mode", "label": "Light Mode" }
+      "id": "theme-setup",
+      "type": "live-component",
+      "title": "Branding",
+      "defaultCode": "export default () => <div className='p-4 bg-blue-500 text-white rounded-xl shadow-lg'>Hello from IAEE</div>"
+    },
+    {
+      "id": "options",
+      "type": "choice",
+      "title": "Features",
+      "options": [
+        {
+          "id": "auth",
+          "label": "Authentication"
+        },
+        {
+          "id": "db",
+          "label": "Database"
+        },
+        {
+          "id": "storage",
+          "label": "Storage"
+        }
+      ],
+      "multiSelect": true
+    },
+    {
+      "id": "priority",
+      "type": "rank",
+      "title": "Priority",
+      "items": [
+        {
+          "id": "speed",
+          "label": "Speed"
+        },
+        {
+          "id": "security",
+          "label": "Security"
+        },
+        {
+          "id": "cost",
+          "label": "Cost"
+        }
       ]
     },
     {
-      "id": "sec-final",
+      "id": "feedback",
+      "type": "text-review",
+      "title": "Feedback",
+      "content": "Please provide your feedback on the prototype."
+    },
+    {
+      "id": "workflow",
+      "type": "kanban",
+      "title": "Workflow",
+      "columns": [
+        {
+          "id": "todo",
+          "label": "To Do"
+        },
+        {
+          "id": "doing",
+          "label": "Doing"
+        },
+        {
+          "id": "done",
+          "label": "Done"
+        }
+      ],
+      "items": [
+        {
+          "id": "task1",
+          "label": "Design UI",
+          "columnId": "todo"
+        },
+        {
+          "id": "task2",
+          "label": "Implement Backend",
+          "columnId": "todo"
+        }
+      ]
+    },
+    {
+      "id": "gallery",
+      "type": "image-choice",
+      "title": "Select Theme",
+      "images": [
+        {
+          "id": "light",
+          "src": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&h=200&fit=crop",
+          "label": "Light"
+        },
+        {
+          "id": "dark",
+          "src": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&h=200&fit=crop",
+          "label": "Dark"
+        }
+      ]
+    },
+    {
+      "id": "api",
+      "type": "api-builder",
+      "title": "API Definition",
+      "basePath": "/v1",
+      "allowedMethods": [
+        "GET",
+        "POST",
+        "PUT"
+      ]
+    },
+    {
+      "id": "mapping",
+      "type": "data-mapper",
+      "title": "Data Mapping",
+      "sources": [
+        {
+          "id": "user_id",
+          "label": "User ID"
+        },
+        {
+          "id": "email",
+          "label": "Email"
+        }
+      ],
+      "targets": [
+        {
+          "id": "external_id",
+          "label": "External ID"
+        },
+        {
+          "id": "contact",
+          "label": "Contact"
+        }
+      ]
+    },
+    {
+      "id": "function-impl",
+      "type": "code-selector",
+      "title": "Choose Implementation",
+      "description": "Select your preferred approach and customize if needed",
+      "language": "typescript",
+      "options": [
+        {
+          "id": "recursive",
+          "label": "Recursive",
+          "code": "function fibonacci(n: number): number {\n  if (n <= 1) return n;\n  return fibonacci(n - 1) + fibonacci(n - 2);\n}\n\n// Usage\nconsole.log(fibonacci(10)); // 55"
+        },
+        {
+          "id": "iterative",
+          "label": "Iterative",
+          "code": "function fibonacci(n: number): number {\n  let [a, b] = [0, 1];\n  for (let i = 0; i < n; i++) {\n    [a, b] = [b, a + b];\n  }\n  return a;\n}\n\n// Usage\nconsole.log(fibonacci(10)); // 55"
+        },
+        {
+          "id": "memoized",
+          "label": "Memoized",
+          "code": "const memo: Record<number, number> = {};\n\nfunction fibonacci(n: number): number {\n  if (n in memo) return memo[n];\n  if (n <= 1) return n;\n  return memo[n] = fibonacci(n - 1) + fibonacci(n - 2);\n}\n\n// Usage\nconsole.log(fibonacci(10)); // 55"
+        }
+      ]
+    },
+    {
+      "id": "budget",
+      "type": "numeric-inputs",
+      "title": "Budget Allocation",
+      "items": [
+        {
+          "id": "infra",
+          "label": "Infrastructure",
+          "max": 1000
+        },
+        {
+          "id": "marketing",
+          "label": "Marketing",
+          "max": 500
+        }
+      ]
+    },
+    {
+      "id": "personas",
+      "type": "card-deck",
+      "title": "Personas",
+      "template": {
+        "name": "string",
+        "role": "string",
+        "bio": "string"
+      },
+      "initialCards": [
+        {
+          "name": "Alice",
+          "role": "Developer",
+          "bio": "Loves TypeScript"
+        }
+      ]
+    },
+    {
+      "id": "conclusion",
       "type": "decision",
-      "title": "Completion",
-      "message": "Thanks for testing the CLI. Press Submit to close the server."
+      "title": "Finalize",
+      "message": "Ready to deploy the experience?"
     }
   ]
 }

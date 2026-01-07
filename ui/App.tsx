@@ -8,6 +8,9 @@ import InfoSection from './sections/InfoSection';
 import ChoiceSection from './sections/ChoiceSection';
 import RankSection from './sections/RankSection';
 import TextReviewSection from './sections/TextReviewSection';
+import CodeSelectorSection from './sections/CodeSelectorSection';
+import CardDeckSection from './sections/CardDeckSection';
+import NumericInputsSection from './sections/NumericInputsSection';
 import WizardLayout from './WizardLayout';
 import PlaygroundLayout from './PlaygroundLayout';
 import { MOCK_EXPERIENCE } from './mocks';
@@ -143,6 +146,12 @@ export default function App() {
         return <KanbanBoard data={section} value={value} onChange={onChange} />;
       case 'image-choice':
         return <ImageChoice data={section} value={value} onChange={onChange} />;
+      case 'code-selector':
+        return <CodeSelectorSection data={section} value={value} onChange={onChange} />;
+      case 'card-deck':
+        return <CardDeckSection data={section} value={value} onChange={onChange} />;
+      case 'numeric-inputs':
+        return <NumericInputsSection data={section} value={value} onChange={onChange} />;
       case 'decision':
         return (
           <div className="flex flex-col items-center justify-center h-full max-w-2xl mx-auto text-center animate-in zoom-in-95 duration-300">

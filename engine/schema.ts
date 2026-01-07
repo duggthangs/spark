@@ -136,6 +136,22 @@ export const LiveComponentSectionSchema = SectionBaseSchema.extend({
 });
 
 /**
+ * Code Selector Section: Present multiple code options for user to choose and edit.
+ * Users can select their preferred implementation and optionally modify the code.
+ */
+export const CodeSelectorSectionSchema = SectionBaseSchema.extend({
+  type: z.literal("code-selector"),
+  language: z.string().optional(),
+  options: z.array(
+    z.object({
+      id: z.string(),
+      label: z.string(),
+      code: z.string(),
+    })
+  ).min(2).max(5),
+});
+
+/**
  * Numeric Inputs Section: Budget allocator with numeric input fields.
  */
 export const NumericInputsSectionSchema = SectionBaseSchema.extend({
@@ -174,6 +190,7 @@ export const SectionSchema = z.discriminatedUnion("type", [
   LiveComponentSectionSchema,
   NumericInputsSectionSchema,
   CardDeckSectionSchema,
+  CodeSelectorSectionSchema,
 ]);
 
 /**
@@ -218,6 +235,7 @@ export type DataMapperSection = z.infer<typeof DataMapperSectionSchema>;
 export type LiveComponentSection = z.infer<typeof LiveComponentSectionSchema>;
 export type NumericInputsSection = z.infer<typeof NumericInputsSectionSchema>;
 export type CardDeckSection = z.infer<typeof CardDeckSectionSchema>;
+export type CodeSelectorSection = z.infer<typeof CodeSelectorSectionSchema>;
 export type Section =
   | InfoSection
   | ChoiceSection
@@ -230,5 +248,6 @@ export type Section =
   | DataMapperSection
   | LiveComponentSection
   | NumericInputsSection
-  | CardDeckSection;
+  | CardDeckSection
+  | CodeSelectorSection;
 export type Experience = z.infer<typeof ExperienceSchema>;

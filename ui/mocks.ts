@@ -88,6 +88,54 @@ export const MOCK_EXPERIENCE: Experience = {
         ]
     },
     {
+        id: "function-impl",
+        type: "code-selector",
+        title: "Choose Implementation",
+        description: "Select your preferred approach and customize if needed",
+        language: "typescript",
+        options: [
+            {
+                id: "recursive",
+                label: "Recursive",
+                code: `function fibonacci(n: number): number {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// Usage
+console.log(fibonacci(10)); // 55`
+            },
+            {
+                id: "iterative",
+                label: "Iterative",
+                code: `function fibonacci(n: number): number {
+  let [a, b] = [0, 1];
+  for (let i = 0; i < n; i++) {
+    [a, b] = [b, a + b];
+  }
+  return a;
+}
+
+// Usage
+console.log(fibonacci(10)); // 55`
+            },
+            {
+                id: "memoized",
+                label: "Memoized",
+                code: `const memo: Record<number, number> = {};
+
+function fibonacci(n: number): number {
+  if (n in memo) return memo[n];
+  if (n <= 1) return n;
+  return memo[n] = fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// Usage
+console.log(fibonacci(10)); // 55`
+            }
+        ]
+    },
+    {
         id: "budget",
         type: "numeric-inputs",
         title: "Budget Allocation",

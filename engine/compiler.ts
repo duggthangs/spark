@@ -12,7 +12,8 @@ import type {
   DataMapperSection, 
   LiveComponentSection, 
   NumericInputsSection, 
-  CardDeckSection 
+  CardDeckSection,
+  CodeSelectorSection
 } from "./schema";
 
 /**
@@ -33,6 +34,7 @@ const isDataMapperSection = (s: Section): s is DataMapperSection => s.type === "
 const isLiveComponentSection = (s: Section): s is LiveComponentSection => s.type === "live-component";
 const isNumericInputsSection = (s: Section): s is NumericInputsSection => s.type === "numeric-inputs";
 const isCardDeckSection = (s: Section): s is CardDeckSection => s.type === "card-deck";
+const isCodeSelectorSection = (s: Section): s is CodeSelectorSection => s.type === "code-selector";
 
 /**
  * Format an Info section (read-only context).
@@ -368,17 +370,35 @@ function formatNumericInputsSection(section: NumericInputsSection, result: any):
 
   lines.push("");
 
-  const values = result && typeof result === "object" ? (result as Record<string, number>) : {};
-
-  if (Object.keys(values).length === 0) {
+  if (!result || typeof result !== "object") {
     lines.push("*No values provided*");
-  } else {
-    section.items?.forEach((item) => {
-      const value = values[item.id];
-      const displayValue = value !== undefined && value !== null ? String(value) : "-";
-      lines.push(`- **${item.label}:** ${displayValue}${item.max ? ` (max: ${item.max})` : ""}`);
-    });
+    lines.push("");
+    return lines.join("\n");
   }
+
+  // Get items from result.__items__ (dynamic) or fall back to section.items (static)
+  const items: Array<{ id: string; label: string; max?: number }> = 
+    Array.isArray(result.__items__) ? result.__items__ : (section.items || []);
+
+  if (items.length === 0) {
+    lines.push("*No items*");
+    lines.push("");
+    return lines.join("\n");
+  }
+
+  // Calculate total
+  let total = 0;
+
+  items.forEach((item) => {
+    const value = result[item.id];
+    const numValue = typeof value === "number" ? value : 0;
+    total += numValue;
+    const displayValue = typeof value === "number" ? value.toLocaleString() : "-";
+    lines.push(`- **${item.label}:** ${displayValue}${item.max ? ` (max: ${item.max.toLocaleString()})` : ""}`);
+  });
+
+  lines.push("");
+  lines.push(`**Total:** ${total.toLocaleString()}`);
 
   lines.push("");
   return lines.join("\n");
@@ -420,6 +440,60 @@ function formatCardDeckSection(section: CardDeckSection, result: any): string {
 }
 
 /**
+ * Format a Code Selector section.
+ */
+function formatCodeSelectorSection(section: CodeSelectorSection, result: any): string {
+  const lines: string[] = [];
+
+  if (section.title) {
+    lines.push(`### ${section.title}`);
+  }
+
+  lines.push("");
+
+  if (!result || typeof result !== "object") {
+    lines.push("*No selection*");
+    lines.push("");
+    return lines.join("\n");
+  }
+
+  const { selectedId, code } = result as { selectedId?: string; code?: Record<string, string> };
+
+  if (!selectedId) {
+    lines.push("*No selection*");
+    lines.push("");
+    return lines.join("\n");
+  }
+
+  // Find the selected option
+  const selectedOption = section.options?.find((opt) => opt.id === selectedId);
+  const label = selectedOption?.label || selectedId;
+
+  lines.push(`**Selected:** ${label} (\`${selectedId}\`)`);
+  lines.push("");
+
+  // Get the code (edited or original)
+  const editedCode = code?.[selectedId] || selectedOption?.code || "";
+  const originalCode = selectedOption?.code || "";
+  const wasModified = editedCode !== originalCode;
+
+  // Determine language for syntax highlighting
+  const language = section.language || "text";
+
+  lines.push(`\`\`\`${language}`);
+  lines.push(editedCode);
+  lines.push("```");
+
+  if (wasModified) {
+    lines.push("");
+    lines.push("*Code was modified from original*");
+  }
+
+  lines.push("");
+  return lines.join("\n");
+}
+
+/**
  * Format a single section based on its type.
  */
 function formatSection(section: Section, result: any): string {
@@ -435,6 +509,7 @@ function formatSection(section: Section, result: any): string {
   if (isLiveComponentSection(section)) return formatLiveComponentSection(section, result);
   if (isNumericInputsSection(section)) return formatNumericInputsSection(section, result);
   if (isCardDeckSection(section)) return formatCardDeckSection(section, result);
+  if (isCodeSelectorSection(section)) return formatCodeSelectorSection(section, result);
 
   const fallback = section as any;
   return `### ${fallback.title || fallback.id}\n\n*Unknown section type: ${fallback.type}*\n\n`;
