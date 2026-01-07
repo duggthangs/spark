@@ -29,8 +29,9 @@ async function main() {
       process.exit(1);
     }
     const port = values.port ? parseInt(values.port) : 3000;
+    const explicitPort = !!values.port;
     const open = values.open ?? true;
-    await startServer(file, port, open);
+    await startServer(file, port, open, explicitPort);
   } else {
     console.log("IAEE CLI");
     console.log("Usage: iaee run <file> [--port 3000] [--no-open]");
