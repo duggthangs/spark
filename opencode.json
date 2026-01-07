@@ -1,0 +1,11 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "spock": {
+      "model": "opencode/big-pickle"
+    },
+    "code-explorer": {
+      "model": "opencode/big-pickle"
+    }
+  }
+}
