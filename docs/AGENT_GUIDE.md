@@ -20,4 +20,5 @@ For a full list of interactive types (Kanban, Data Mapper, API Builder, etc.) an
 ## 4. Tips for Delight
 - **Start with Info**: Don't jump straight into choices. Contextualize the plan first.
 - **Use Live Components**: If proposing a UI change, use `live-component` so the user can "feel" the layout.
+- **Use Code Selector**: When proposing multiple implementation options (algorithms, patterns, utilities), use `code-selector` so the user can compare, select, and customize.
 - **Group Logic**: Use `kanban` for prioritization instead of simple lists.

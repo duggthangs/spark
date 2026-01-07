@@ -1,0 +1,139 @@
+{
+  "id": "numeric-inputs-enhancement",
+  "title": "Numeric Inputs Enhancement Plan",
+  "description": "Plan for adding dynamic add/remove functionality to the numeric-inputs section type",
+  "sections": [
+    {
+      "id": "intro",
+      "type": "info",
+      "title": "Overview",
+      "content": "Currently, the numeric-inputs section only displays items defined in the schema. This enhancement will allow users to dynamically add and remove budget items, similar to how card-deck works. We need to make several design decisions about schema changes, UI behavior, and value structure."
+    },
+    {
+      "id": "value-structure",
+      "type": "choice",
+      "title": "Value Structure",
+      "description": "How should we store the feedback data to capture user-added items?",
+      "options": [
+        {
+          "id": "structured",
+          "label": "Structured: { items: [...], values: {...} } - Persists item metadata (labels, max) with values"
+        },
+        {
+          "id": "flat",
+          "label": "Flat: Record<string, number> - Keep current structure, lose labels for user-added items"
+        }
+      ]
+    },
+    {
+      "id": "new-item-fields",
+      "type": "choice",
+      "title": "New Item Fields",
+      "description": "When adding a new item, what should the user provide?",
+      "options": [
+        {
+          "id": "label-only",
+          "label": "Label only (id auto-generated, no max constraint)"
+        },
+        {
+          "id": "label-max-optional",
+          "label": "Label + optional max (user can set a limit if desired)"
+        },
+        {
+          "id": "label-max-required",
+          "label": "Label + required max (always require a limit)"
+        }
+      ]
+    },
+    {
+      "id": "delete-behavior",
+      "type": "choice",
+      "title": "Delete Behavior",
+      "description": "Should users be able to delete items that came from the initial schema definition?",
+      "options": [
+        {
+          "id": "all-deletable",
+          "label": "Yes, all items deletable (initial and user-added)"
+        },
+        {
+          "id": "user-only",
+          "label": "No, only user-added items can be deleted"
+        },
+        {
+          "id": "schema-flag",
+          "label": "Configurable via schema flag (allowDelete: true/false)"
+        }
+      ]
+    },
+    {
+      "id": "item-limit",
+      "type": "choice",
+      "title": "Item Limit",
+      "description": "Should there be a maximum number of items?",
+      "options": [
+        {
+          "id": "no-limit",
+          "label": "No limit"
+        },
+        {
+          "id": "hard-10",
+          "label": "Hard limit of 10 (consistent with card-deck)"
+        },
+        {
+          "id": "schema-config",
+          "label": "Configurable via schema (maxItems: number)"
+        }
+      ]
+    },
+    {
+      "id": "ui-add-flow",
+      "type": "code-selector",
+      "title": "Add Item UI Flow",
+      "description": "How should the 'Add Item' interaction work?",
+      "language": "text",
+      "options": [
+        {
+          "id": "inline-form",
+          "label": "Inline Form",
+          "code": "[ + Add Item ] button at bottom\n\nWhen clicked, expands to show inline form:\n┌─────────────────────────────────────┐\n│ Label: [_______________]            │\n│ Max:   [_______________] (optional) │\n│        [Cancel] [Add]               │\n└─────────────────────────────────────┘\n\nPros: Clean, focused interaction\nCons: Extra click to start adding"
+        },
+        {
+          "id": "modal",
+          "label": "Modal Dialog",
+          "code": "[ + Add Item ] opens a centered modal:\n\n┌──────────────────────────────────┐\n│       Add Budget Item            │\n│                                  │\n│  Label: [_______________]        │\n│  Max:   [_______________]        │\n│                                  │\n│        [Cancel]  [Add]           │\n└──────────────────────────────────┘\n\nPros: Clear separation\nCons: Disruptive, extra UI layer"
+        },
+        {
+          "id": "always-visible",
+          "label": "Always Visible Row",
+          "code": "Empty row always visible at bottom:\n\nInfrastructure  [750_____] max: 1000\nMarketing       [250_____] max: 500\n───────────────────────────────────────\n[New item...]   [0_______] [Set max]\n                           [+ Add]\n\nPros: Fast, discoverable\nCons: Takes space, might confuse users"
+        }
+      ]
+    },
+    {
+      "id": "schema-changes",
+      "type": "text-review",
+      "title": "Schema Changes Review",
+      "description": "Review potential schema changes and provide any additional considerations",
+      "content": "Based on decisions above, the schema may need updates:\n\n1. If value structure changes to { items, values }, the compiler needs updating\n2. If maxItems is configurable, add to NumericInputsSectionSchema\n3. If delete behavior is configurable, add allowDelete flag\n\nAny additional schema considerations?"
+    },
+    {
+      "id": "priority",
+      "type": "rank",
+      "title": "Implementation Priority",
+      "description": "Order these implementation tasks by priority",
+      "items": [
+        { "id": "ui-add-remove", "label": "Add/Remove UI in component" },
+        { "id": "value-structure", "label": "Update value structure" },
+        { "id": "schema-update", "label": "Update schema definition" },
+        { "id": "compiler-update", "label": "Update compiler formatter" },
+        { "id": "mock-update", "label": "Update mocks and demo.json" }
+      ]
+    },
+    {
+      "id": "approve",
+      "type": "decision",
+      "title": "Ready to Implement?",
+      "message": "Review your choices and approve to begin implementation"
+    }
+  ]
+}

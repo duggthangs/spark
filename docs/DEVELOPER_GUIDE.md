@@ -25,6 +25,7 @@ If you see "No Selection" or "Rejected" in the output, the flow is likely broken
 | `live-component` | `{ activeClasses, customCode }` | `<div class="...">...</div>` (String) |
 | `kanban` | `{ columns: { id, tasks: [] }[] }` | `Record<string, string[]>` (ID Map) |
 | `image-choice` | `{ selectedId: string }` | `string` (ID) |
+| `code-selector` | `{ selectedId, code: Record<string, string> }` | Same (structured object) |
 
 ## 3. Debugging Super-Powers
 

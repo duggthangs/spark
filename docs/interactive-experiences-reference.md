@@ -332,6 +332,33 @@ This document outlines interactive experiences that make reviewing plans delight
 
 ---
 
+### 14. Code Selector
+
+**Use case**: Choosing between implementation approaches, algorithms, or code patterns.
+
+**Interactivity**:
+- Tab bar with radio buttons showing code options (2-5 options)
+- Editable code area for customization
+- Per-tab reset button to restore original code
+- Visual indicator (amber dot) when code is modified
+- Language badge showing configured language
+
+**Data Capture**:
+```json
+{
+  "selectedId": "recursive",
+  "code": {
+    "recursive": "function fib(n) { if (n <= 1) return n; return fib(n-1) + fib(n-2); }",
+    "iterative": "function fib(n) { let [a, b] = [0, 1]; for (...) ... }",
+    "memoized": "const memo = {}; function fib(n) { ... }"
+  }
+}
+```
+
+**Section Type Required**: `CodeSelector`
+
+---
+
 ## Section Type Requirements (Consolidated)
 
 | Experience | Section Type Required | Status |
@@ -349,6 +376,7 @@ This document outlines interactive experiences that make reviewing plans delight
 | API Endpoint Builder | `ApiEndpointBuilder` | New |
 | Live Component | `LiveComponent` | New |
 | Data Mapper | `DataMapper` | New |
+| Code Selector | `CodeSelector` | New |
 
 ---
 
