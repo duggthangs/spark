@@ -111,12 +111,77 @@
     {
       "id": "api",
       "type": "api-builder",
-      "title": "API Definition",
-      "basePath": "/v1",
+      "title": "User API Endpoints",
+      "basePath": "/api/v1",
       "allowedMethods": [
         "GET",
         "POST",
-        "PUT"
+        "PUT",
+        "DELETE"
+      ],
+      "defaultHeaders": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "responseCodes": [
+        {
+          "code": 200,
+          "label": "OK",
+          "body": "{\n  \"success\": true\n}"
+        },
+        {
+          "code": 201,
+          "label": "Created",
+          "body": "{\n  \"id\": \"usr_123\",\n  \"created_at\": \"2024-03-20T10:00:00Z\"\n}"
+        },
+        {
+          "code": 204,
+          "label": "No Content"
+        },
+        {
+          "code": 400,
+          "label": "Bad Request",
+          "body": "{\n  \"error\": \"Invalid request\"\n}"
+        },
+        {
+          "code": 404,
+          "label": "Not Found",
+          "body": "{\n  \"error\": \"User not found\"\n}"
+        }
+      ],
+      "initialEndpoints": [
+        {
+          "id": "get-users",
+          "method": "GET",
+          "path": "/users",
+          "description": "List all users"
+        },
+        {
+          "id": "create-user",
+          "method": "POST",
+          "path": "/users",
+          "description": "Create a new user"
+        },
+        {
+          "id": "get-user",
+          "method": "GET",
+          "path": "/users/:id",
+          "description": "Get a specific user"
+        },
+        {
+          "id": "update-user",
+          "method": "PUT",
+          "path": "/users/:id",
+          "description": "Update a user"
+        },
+        {
+          "id": "delete-user",
+          "method": "DELETE",
+          "path": "/users/:id",
+          "description": "Delete a user"
+        }
       ]
     },
     {

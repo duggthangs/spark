@@ -106,6 +106,30 @@ export const ApiBuilderSectionSchema = SectionBaseSchema.extend({
   type: z.literal("api-builder"),
   basePath: z.string().optional(),
   allowedMethods: z.array(z.string()).optional(),
+  defaultPath: z.string().optional(),
+  defaultBody: z.string().optional(),
+  defaultHeaders: z.array(
+    z.object({
+      key: z.string(),
+      value: z.string(),
+    })
+  ).optional(),
+  responseCodes: z.array(
+    z.object({
+      code: z.number(),
+      label: z.string(),
+      body: z.string().optional(),
+    })
+  ).optional(),
+  initialEndpoints: z.array(
+    z.object({
+      id: z.string(),
+      method: z.string().optional(),
+      path: z.string().optional(),
+      description: z.string().optional(),
+    })
+  ).optional(),
+  maxEndpoints: z.number().optional(),
 });
 
 /**

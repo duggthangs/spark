@@ -283,35 +283,195 @@ function formatApiBuilderSection(section: ApiBuilderSection, result: any): strin
 
   if (!result || typeof result !== "object") {
     lines.push("*No API defined*");
-  } else {
-    const typedResult = result as any; // Still using as any for the dynamic result object for now
-    const method = typedResult.method || "GET";
-    const path = typedResult.path || "/";
+    lines.push("");
+    return lines.join("\n");
+  }
 
-    lines.push("```http");
-    lines.push(`${method} ${path}`);
-    lines.push("```");
-
-    if (typedResult.description) {
+  // Handle new multi-endpoint format
+  if (result.endpoints && Array.isArray(result.endpoints)) {
+    const endpoints = result.endpoints;
+    
+    if (endpoints.length === 0) {
+      lines.push("*No endpoints defined*");
       lines.push("");
-      lines.push(typedResult.description);
+      return lines.join("\n");
     }
 
-    if (typedResult.headers && Object.keys(typedResult.headers).length > 0) {
+    // Format each endpoint
+    endpoints.forEach((endpoint: any, index: number) => {
+      if (index > 0) {
+        lines.push("---");
+        lines.push("");
+      }
+
+      // Endpoint header (h4)
+      const method = endpoint.method || "GET";
+      const path = endpoint.path || "/";
+      lines.push(`#### ${method} ${path}`);
+      lines.push("");
+
+      if (endpoint.description) {
+        lines.push(endpoint.description);
+        lines.push("");
+      }
+
+      // Path Parameters
+      if (endpoint.pathParams && Object.keys(endpoint.pathParams).length > 0) {
+        lines.push("**Path Parameters:**");
+        Object.entries(endpoint.pathParams).forEach(([key, value]) => {
+          lines.push(`- \`${key}\` = \`${value}\``);
+        });
+        lines.push("");
+      }
+
+      // Query Parameters
+      if (endpoint.queryParams && Array.isArray(endpoint.queryParams) && endpoint.queryParams.length > 0) {
+        const nonEmptyParams = endpoint.queryParams.filter((p: any) => p.key && p.key.trim());
+        if (nonEmptyParams.length > 0) {
+          lines.push("**Query Parameters:**");
+          nonEmptyParams.forEach((param: any) => {
+            lines.push(`- \`${param.key}\` = \`${param.value || ''}\``);
+          });
+          lines.push("");
+        }
+      }
+
+      // Headers
+      if (endpoint.headers && Array.isArray(endpoint.headers) && endpoint.headers.length > 0) {
+        const nonEmptyHeaders = endpoint.headers.filter((h: any) => h.key && h.key.trim());
+        if (nonEmptyHeaders.length > 0) {
+          lines.push("**Headers:**");
+          nonEmptyHeaders.forEach((header: any) => {
+            lines.push(`- \`${header.key}\`: ${header.value}`);
+          });
+          lines.push("");
+        }
+      }
+
+      // Request Body
+      if (endpoint.body && typeof endpoint.body === "string" && endpoint.body.trim()) {
+        lines.push("**Request Body:**");
+        lines.push("");
+        lines.push("```json");
+        try {
+          const parsed = JSON.parse(endpoint.body);
+          lines.push(JSON.stringify(parsed, null, 2));
+        } catch {
+          lines.push(endpoint.body);
+        }
+        lines.push("```");
+        lines.push("");
+      }
+
+      // Response
+      if (endpoint.responseCode || endpoint.responseBody) {
+        const responseLabel = endpoint.responseCode 
+          ? `**Expected Response:** ${endpoint.responseCode}${
+              endpoint.responseCode >= 200 && endpoint.responseCode < 300 ? ' ✓' :
+              endpoint.responseCode >= 400 ? ' ⚠️' : ''
+            }`
+          : "**Response:**";
+        lines.push(responseLabel);
+        
+        if (endpoint.responseBody && typeof endpoint.responseBody === "string" && endpoint.responseBody.trim()) {
+          lines.push("");
+          lines.push("```json");
+          try {
+            const parsed = JSON.parse(endpoint.responseBody);
+            lines.push(JSON.stringify(parsed, null, 2));
+          } catch {
+            lines.push(endpoint.responseBody);
+          }
+          lines.push("```");
+        }
+        lines.push("");
+      }
+    });
+
+    return lines.join("\n");
+  }
+
+  // Legacy single-endpoint format (for backward compatibility in tests)
+  const typedResult = result as any;
+  const method = typedResult.method || "GET";
+  const path = typedResult.path || "/";
+
+  lines.push("```http");
+  lines.push(`${method} ${path}`);
+  lines.push("```");
+
+  if (typedResult.description) {
+    lines.push("");
+    lines.push(typedResult.description);
+  }
+
+  // Path Parameters
+  if (typedResult.pathParams && Object.keys(typedResult.pathParams).length > 0) {
+    lines.push("");
+    lines.push("**Path Parameters:**");
+    Object.entries(typedResult.pathParams).forEach(([key, value]) => {
+      lines.push(`- \`${key}\` = \`${value}\``);
+    });
+  }
+
+  // Query Parameters
+  if (typedResult.queryParams && Array.isArray(typedResult.queryParams) && typedResult.queryParams.length > 0) {
+    lines.push("");
+    lines.push("**Query Parameters:**");
+    typedResult.queryParams.forEach((param: any) => {
+      if (param.key) {
+        lines.push(`- \`${param.key}\` = \`${param.value || ''}\``);
+      }
+    });
+  }
+
+  // Headers
+  if (typedResult.headers && Array.isArray(typedResult.headers) && typedResult.headers.length > 0) {
+    const nonEmptyHeaders = typedResult.headers.filter((h: any) => h.key && h.key.trim());
+    if (nonEmptyHeaders.length > 0) {
       lines.push("");
       lines.push("**Headers:**");
-      lines.push("");
-      Object.entries(typedResult.headers).forEach(([key, value]) => {
-        lines.push(`- \`${key}\`: ${value}`);
+      nonEmptyHeaders.forEach((header: any) => {
+        lines.push(`- \`${header.key}\`: ${header.value}`);
       });
     }
+  }
 
-    if (typedResult.body) {
-      lines.push("");
-      lines.push("**Request Body:**");
+  // Request Body
+  if (typedResult.body && typeof typedResult.body === "string" && typedResult.body.trim()) {
+    lines.push("");
+    lines.push("**Request Body:**");
+    lines.push("");
+    lines.push("```json");
+    try {
+      const parsed = JSON.parse(typedResult.body);
+      lines.push(JSON.stringify(parsed, null, 2));
+    } catch {
+      lines.push(typedResult.body);
+    }
+    lines.push("```");
+  }
+
+  // Response
+  if (typedResult.responseCode || typedResult.responseBody) {
+    lines.push("");
+    const responseLabel = typedResult.responseCode 
+      ? `**Expected Response:** ${typedResult.responseCode}${
+          typedResult.responseCode >= 200 && typedResult.responseCode < 300 ? ' ✓' :
+          typedResult.responseCode >= 400 ? ' ⚠️' : ''
+        }`
+      : "**Response:**";
+    lines.push(responseLabel);
+    
+    if (typedResult.responseBody && typeof typedResult.responseBody === "string" && typedResult.responseBody.trim()) {
       lines.push("");
       lines.push("```json");
-      lines.push(JSON.stringify(typedResult.body, null, 2));
+      try {
+        const parsed = JSON.parse(typedResult.responseBody);
+        lines.push(JSON.stringify(parsed, null, 2));
+      } catch {
+        lines.push(typedResult.responseBody);
+      }
       lines.push("```");
     }
   }

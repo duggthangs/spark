@@ -209,13 +209,10 @@ test("compiler: formats API Builder section", () => {
       method: "POST",
       path: "/users",
       description: "Create a new user",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: {
-        name: "John Doe",
-        email: "john@example.com",
-      },
+      headers: [
+        { key: "Content-Type", value: "application/json" },
+      ],
+      body: '{\n  "name": "John Doe",\n  "email": "john@example.com"\n}',
     },
     "sec-decision": true,
   };
@@ -229,6 +226,131 @@ test("compiler: formats API Builder section", () => {
   expect(markdown).toContain("**Headers:**");
   expect(markdown).toContain("**Request Body:**");
   expect(markdown).toContain('"name": "John Doe"');
+});
+
+test("compiler: formats enhanced API Builder section with all fields", () => {
+  const experience: Experience = {
+    id: "test-006-enhanced",
+    title: "Enhanced API Builder Test",
+    sections: [
+      {
+        id: "sec-api",
+        type: "api-builder",
+        title: "Create User Endpoint",
+        basePath: "/api/v1",
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  const results = {
+    "sec-api": {
+      method: "POST",
+      path: "/api/v1/users/:id/posts",
+      pathParams: {
+        ":id": "usr_123",
+      },
+      queryParams: [
+        { key: "include", value: "comments" },
+        { key: "limit", value: "10" },
+      ],
+      headers: [
+        { key: "Content-Type", value: "application/json" },
+        { key: "Authorization", value: "Bearer token123" },
+      ],
+      body: '{\n  "title": "Hello World",\n  "content": "Post content"\n}',
+      responseCode: 201,
+      responseBody: '{\n  "id": "post_456",\n  "created_at": "2024-03-20T10:00:00Z"\n}',
+    },
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("### Create User Endpoint");
+  expect(markdown).toContain("POST /api/v1/users/:id/posts");
+  expect(markdown).toContain("**Path Parameters:**");
+  expect(markdown).toContain("`:id` = `usr_123`");
+  expect(markdown).toContain("**Query Parameters:**");
+  expect(markdown).toContain("`include` = `comments`");
+  expect(markdown).toContain("`limit` = `10`");
+  expect(markdown).toContain("**Headers:**");
+  expect(markdown).toContain("`Content-Type`: application/json");
+  expect(markdown).toContain("`Authorization`: Bearer token123");
+  expect(markdown).toContain("**Request Body:**");
+  expect(markdown).toContain('"title": "Hello World"');
+  expect(markdown).toContain("**Expected Response:** 201");
+  expect(markdown).toContain('"id": "post_456"');
+});
+
+test("compiler: formats multi-endpoint API Builder section", () => {
+  const experience: Experience = {
+    id: "test-006-multi",
+    title: "Multi-Endpoint API Test",
+    sections: [
+      {
+        id: "sec-api",
+        type: "api-builder",
+        title: "User API",
+        basePath: "/api/v1",
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  const results = {
+    "sec-api": {
+      endpoints: [
+        {
+          id: "get-users",
+          method: "GET",
+          path: "/users",
+          queryParams: [{ key: "limit", value: "10" }],
+          responseCode: 200,
+          responseBody: '[{"id": "1"}]',
+        },
+        {
+          id: "create-user",
+          method: "POST",
+          path: "/users",
+          headers: [{ key: "Content-Type", value: "application/json" }],
+          body: '{"name": "Alice"}',
+          responseCode: 201,
+          responseBody: '{"id": "2"}',
+        },
+        {
+          id: "delete-user",
+          method: "DELETE",
+          path: "/users/:id",
+          pathParams: { ":id": "123" },
+          responseCode: 204,
+        },
+      ],
+    },
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("### User API");
+  expect(markdown).toContain("#### GET /users");
+  expect(markdown).toContain("#### POST /users");
+  expect(markdown).toContain("#### DELETE /users/:id");
+  expect(markdown).toContain("`limit` = `10`");
+  expect(markdown).toContain('`Content-Type`: application/json');
+  expect(markdown).toContain('"name": "Alice"');
+  expect(markdown).toContain("**Expected Response:** 200 ✓");
+  expect(markdown).toContain("**Expected Response:** 201 ✓");
+  expect(markdown).toContain("`:id` = `123`");
+  expect(markdown).toContain("---"); // Separator between endpoints
 });
 
 test("compiler: formats Data Mapper section", () => {

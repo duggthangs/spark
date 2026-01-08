@@ -1,133 +1,486 @@
 import React, { useState, useEffect } from 'react';
-import { Globe, ArrowRight, Check, AlertCircle } from 'lucide-react';
+import { Globe, ArrowRight, ChevronDown, ChevronRight, Plus, X, Copy } from 'lucide-react';
+
+interface Endpoint {
+  id: string;
+  method: string;
+  path: string;
+  pathParams?: Record<string, string>;
+  queryParams?: Array<{ key: string; value: string }>;
+  headers?: Array<{ key: string; value: string }>;
+  body?: string;
+  responseCode?: number;
+  responseBody?: string;
+  description?: string;
+}
 
 export default function ApiEndpointBuilder({ data, value, onChange }: { data?: any, value?: any, onChange?: (val: any) => void }) {
   const defaultMethod = data?.allowedMethods?.[0] || 'GET';
-  const defaultPath = data?.basePath || '/api/users/:id/posts';
+  const defaultHeaders = data?.defaultHeaders || [
+    { key: 'Content-Type', value: 'application/json' }
+  ];
+  const defaultResponseCodes = data?.responseCodes || [
+    { code: 200, label: 'OK', body: '{\n  "success": true\n}' },
+    { code: 201, label: 'Created' },
+    { code: 400, label: 'Bad Request' },
+    { code: 404, label: 'Not Found' }
+  ];
+  const maxEndpoints = data?.maxEndpoints || 10;
 
-  const method = value?.method || defaultMethod;
-  const path = value?.path || defaultPath;
+  // Initialize endpoints from value or initialEndpoints
+  const initialEndpoints: Endpoint[] = value?.endpoints || 
+    data?.initialEndpoints?.map((e: any): Endpoint => ({
+      id: e.id as string,
+      method: (e.method || defaultMethod) as string,
+      path: (e.path || '') as string,
+      pathParams: {},
+      queryParams: [],
+      headers: [...defaultHeaders],
+      body: data?.defaultBody || '',
+      responseCode: defaultResponseCodes[0]?.code || 200,
+      responseBody: defaultResponseCodes[0]?.body || '',
+      description: e.description || '',
+    })) || [];
 
-  // Report initial state
+  const [endpoints, setEndpoints] = useState<Endpoint[]>(initialEndpoints);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(
+    initialEndpoints.length > 0 ? 0 : null
+  );
+
+  // Report state changes
   useEffect(() => {
-    if (!value && onChange) {
-      onChange({ method: defaultMethod, path: defaultPath });
-    }
-  }, [value, onChange, defaultMethod, defaultPath]);
-
-  const updateState = (updates: any) => {
-    onChange?.({ method, path, ...updates });
-  };
-  
-  // Parse params from path
-  const params = path.match(/:[a-zA-Z0-9_]+/g) || [];
+    onChange?.({ endpoints });
+  }, [endpoints]);
 
   const methods = data?.allowedMethods || ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
 
-  return (
-    <div className="max-w-3xl mx-auto">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        {/* Header / URL Bar */}
-        <div className="p-1 bg-slate-50 border-b border-slate-200 flex items-center gap-1">
-          <select 
-            value={method}
-            onChange={(e) => updateState({ method: e.target.value })}
-            className={`px-3 py-2 rounded-lg font-bold text-sm outline-none border-transparent focus:bg-white transition-colors ${
-              method === 'GET' ? 'text-blue-600' :
-              method === 'POST' ? 'text-emerald-600' :
-              method === 'DELETE' ? 'text-rose-600' : 'text-amber-600'
-            }`}
-          >
-            {methods.map((m: string) => <option key={m}>{m}</option>)}
-          </select>
+  const createNewEndpoint = (): Endpoint => ({
+    id: `endpoint-${Date.now()}`,
+    method: defaultMethod,
+    path: data?.basePath || '/',
+    pathParams: {},
+    queryParams: [],
+    headers: [...defaultHeaders],
+    body: data?.defaultBody || '',
+    responseCode: defaultResponseCodes[0]?.code || 200,
+    responseBody: defaultResponseCodes[0]?.body || '',
+  });
 
-          <div className="flex-1 relative group">
-            <input
-              type="text"
-              value={path}
-              onChange={(e) => updateState({ path: e.target.value })}
-              className="w-full px-3 py-2 bg-white rounded-md border border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none font-mono text-sm text-slate-700 transition-all"
-            />
-            {/* Visual overlay for params */}
-            <div className="absolute top-0 left-0 w-full h-full px-3 py-2 pointer-events-none flex font-mono text-sm text-transparent" aria-hidden="true">
-               {/* This is a tricky CSS hack to highlight text, simpler to just list them below for this prototype */}
-            </div>
+  const handleAddEndpoint = () => {
+    if (endpoints.length >= maxEndpoints) return;
+    const newEndpoint = createNewEndpoint();
+    const newEndpoints = [...endpoints, newEndpoint];
+    setEndpoints(newEndpoints);
+    setExpandedIndex(newEndpoints.length - 1); // Auto-expand new endpoint
+  };
+
+  const handleDuplicateEndpoint = (index: number) => {
+    if (endpoints.length >= maxEndpoints) return;
+    const original = endpoints[index];
+    if (!original) return;
+    const duplicated: Endpoint = {
+      ...original,
+      id: `endpoint-${Date.now()}`,
+    };
+    const newEndpoints = [...endpoints];
+    newEndpoints.splice(index + 1, 0, duplicated);
+    setEndpoints(newEndpoints);
+    setExpandedIndex(index + 1); // Auto-expand duplicated endpoint
+  };
+
+  const handleDeleteEndpoint = (index: number) => {
+    const newEndpoints = endpoints.filter((_, i) => i !== index);
+    setEndpoints(newEndpoints);
+    if (expandedIndex === index) {
+      setExpandedIndex(newEndpoints.length > 0 ? 0 : null);
+    } else if (expandedIndex !== null && expandedIndex > index) {
+      setExpandedIndex(expandedIndex - 1);
+    }
+  };
+
+  const handleUpdateEndpoint = (index: number, updates: Partial<Endpoint>) => {
+    const newEndpoints = [...endpoints];
+    const existing = newEndpoints[index];
+    if (!existing) return;
+    newEndpoints[index] = { ...existing, ...updates };
+    setEndpoints(newEndpoints);
+  };
+
+  const toggleExpanded = (index: number) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
+  const getMethodColor = (method: string) => {
+    switch (method) {
+      case 'GET': return 'text-blue-600 bg-blue-50';
+      case 'POST': return 'text-emerald-600 bg-emerald-50';
+      case 'PUT': return 'text-amber-600 bg-amber-50';
+      case 'DELETE': return 'text-rose-600 bg-rose-50';
+      case 'PATCH': return 'text-purple-600 bg-purple-50';
+      default: return 'text-slate-600 bg-slate-50';
+    }
+  };
+
+  // Empty state
+  if (endpoints.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Globe className="w-8 h-8 text-slate-400" />
           </div>
-          
-          <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200">
-            Test
+          <h3 className="text-lg font-medium text-slate-900 mb-2">No endpoints defined yet</h3>
+          <p className="text-sm text-slate-500 mb-6">Add your first API endpoint to get started</p>
+          <button
+            onClick={handleAddEndpoint}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add Your First Endpoint
           </button>
         </div>
+      </div>
+    );
+  }
 
-        {/* Content Area */}
-        <div className="p-6 space-y-8">
-          
-          {/* Detected Params */}
-          {params.length > 0 && (
-            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-              <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Path Variables</h4>
-              <div className="grid gap-3">
-                {params.map((param: string, i: number) => (
-                  <div key={i} className="flex items-center gap-3 group">
-                    <div className="w-24 font-mono text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded text-right">
-                      {param}
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-slate-300" />
-                    <input 
-                      type="text" 
-                      placeholder="Value..."
-                      className="flex-1 px-3 py-1.5 border-b border-slate-200 focus:border-blue-500 outline-none text-sm transition-colors bg-transparent"
-                    />
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="flex items-center gap-1 text-xs text-slate-400">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                        <span>String</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-8">
-             {/* Request Schema */}
-             <div>
-                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                   Request Body
-                   <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">JSON</span>
-                </h4>
-                <div className="bg-slate-900 rounded-lg p-4 min-h-[200px] relative group">
-                   <textarea 
-                     className="w-full h-full bg-transparent text-slate-300 font-mono text-xs outline-none resize-none"
-                     defaultValue={`{\n  "name": "John Doe",\n  "email": "john@example.com"\n}`}
-                   />
-                </div>
-             </div>
-
-             {/* Response Preview */}
-             <div>
-                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                   Response
-                   <span className="text-[10px] bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded">200 OK</span>
-                </h4>
-                <div className="bg-slate-50 rounded-lg p-4 min-h-[200px] border border-slate-200">
-                   <pre className="text-xs text-slate-600 font-mono">
-{`{
-  "id": "usr_123",
-  "created_at": "2024-03-20T10:00:00Z",
-  "status": "active"
-}`}
-                   </pre>
-                </div>
-             </div>
-          </div>
-        </div>
+  return (
+    <div className="max-w-4xl mx-auto space-y-4">
+      {/* Add Endpoint Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleAddEndpoint}
+          disabled={endpoints.length >= maxEndpoints}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Plus className="w-4 h-4" />
+          Add Endpoint
+          {endpoints.length >= maxEndpoints && ` (Max ${maxEndpoints})`}
+        </button>
       </div>
 
-      <div className="mt-6 flex items-start gap-3 p-4 bg-blue-50 text-blue-700 rounded-lg text-sm">
+      {/* Endpoints List */}
+      <div className="space-y-2">
+        {endpoints.map((endpoint, index) => (
+          <div key={endpoint.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            {/* Card Header - Collapsed View */}
+            <div
+              className="flex items-center gap-3 p-4 cursor-pointer hover:bg-slate-50 transition-colors"
+              onClick={() => toggleExpanded(index)}
+            >
+              <button className="p-1 hover:bg-slate-200 rounded transition-colors">
+                {expandedIndex === index ? (
+                  <ChevronDown className="w-4 h-4 text-slate-600" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-slate-600" />
+                )}
+              </button>
+              
+              <span className={`px-2 py-1 text-xs font-bold rounded ${getMethodColor(endpoint.method)}`}>
+                {endpoint.method}
+              </span>
+              
+              <span className="font-mono text-sm text-slate-700 flex-1">
+                {endpoint.path || '(no path)'}
+              </span>
+
+              <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={() => handleDuplicateEndpoint(index)}
+                  disabled={endpoints.length >= maxEndpoints}
+                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Duplicate endpoint"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleDeleteEndpoint(index)}
+                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
+                  title="Delete endpoint"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Card Body - Expanded View */}
+            {expandedIndex === index && (
+              <div className="border-t border-slate-200 animate-in fade-in slide-in-from-top-2 duration-200">
+                <EndpointEditor
+                  endpoint={endpoint}
+                  methods={methods}
+                  defaultResponseCodes={defaultResponseCodes}
+                  onUpdate={(updates) => handleUpdateEndpoint(index, updates)}
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-start gap-3 p-4 bg-blue-50 text-blue-700 rounded-lg text-sm">
         <Globe className="w-5 h-5 shrink-0" />
-        <p>This builder automatically extracts path parameters and validates JSON schemas in real-time. Try changing the URL path above.</p>
+        <p>Define multiple API endpoints for your feature. Each endpoint can have its own path parameters, headers, and request/response schemas.</p>
+      </div>
+    </div>
+  );
+}
+
+// Endpoint Editor Component (the full editor view when expanded)
+function EndpointEditor({
+  endpoint,
+  methods,
+  defaultResponseCodes,
+  onUpdate,
+}: {
+  endpoint: Endpoint;
+  methods: string[];
+  defaultResponseCodes: any[];
+  onUpdate: (updates: Partial<Endpoint>) => void;
+}) {
+  const [headersExpanded, setHeadersExpanded] = useState(false);
+
+  // Parse params from path
+  const detectedParams = endpoint.path.match(/:[a-zA-Z0-9_]+/g) || [];
+
+  const handlePathParamChange = (param: string, value: string) => {
+    const newPathParams = { ...endpoint.pathParams, [param]: value };
+    onUpdate({ pathParams: newPathParams });
+  };
+
+  const addQueryParam = () => {
+    const newQueryParams = [...(endpoint.queryParams || []), { key: '', value: '' }];
+    onUpdate({ queryParams: newQueryParams });
+  };
+
+  const updateQueryParam = (index: number, field: 'key' | 'value', value: string) => {
+    const newQueryParams = [...(endpoint.queryParams || [])];
+    newQueryParams[index] = { ...(newQueryParams[index] || { key: '', value: '' }), [field]: value };
+    onUpdate({ queryParams: newQueryParams });
+  };
+
+  const removeQueryParam = (index: number) => {
+    const newQueryParams = (endpoint.queryParams || []).filter((_, i) => i !== index);
+    onUpdate({ queryParams: newQueryParams });
+  };
+
+  const addHeader = () => {
+    const newHeaders = [...(endpoint.headers || []), { key: '', value: '' }];
+    onUpdate({ headers: newHeaders });
+  };
+
+  const updateHeader = (index: number, field: 'key' | 'value', value: string) => {
+    const newHeaders = [...(endpoint.headers || [])];
+    newHeaders[index] = { ...(newHeaders[index] || { key: '', value: '' }), [field]: value };
+    onUpdate({ headers: newHeaders });
+  };
+
+  const removeHeader = (index: number) => {
+    const newHeaders = (endpoint.headers || []).filter((_, i) => i !== index);
+    onUpdate({ headers: newHeaders });
+  };
+
+  const handleResponseCodeChange = (code: number) => {
+    const selectedResponse = defaultResponseCodes.find((r: any) => r.code === code);
+    onUpdate({
+      responseCode: code,
+      responseBody: selectedResponse?.body || endpoint.responseBody || '',
+    });
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* URL Bar */}
+      <div className="flex items-center gap-2">
+        <select
+          value={endpoint.method}
+          onChange={(e) => onUpdate({ method: e.target.value })}
+          className={`px-3 py-2 rounded-lg font-bold text-sm outline-none border border-slate-200 focus:border-blue-400 transition-colors ${
+            endpoint.method === 'GET' ? 'text-blue-600' :
+            endpoint.method === 'POST' ? 'text-emerald-600' :
+            endpoint.method === 'DELETE' ? 'text-rose-600' : 'text-amber-600'
+          }`}
+        >
+          {methods.map((m: string) => <option key={m}>{m}</option>)}
+        </select>
+
+        <input
+          type="text"
+          value={endpoint.path}
+          onChange={(e) => onUpdate({ path: e.target.value })}
+          className="flex-1 px-3 py-2 bg-white rounded-md border border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none font-mono text-sm text-slate-700 transition-all"
+          placeholder="/api/v1/users/:id"
+        />
+      </div>
+
+      {/* Path Parameters */}
+      {detectedParams.length > 0 && (
+        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Path Variables</h4>
+          <div className="grid gap-3">
+            {detectedParams.map((param: string, i: number) => (
+              <div key={i} className="flex items-center gap-3 group">
+                <div className="w-24 font-mono text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded text-right">
+                  {param}
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-300" />
+                <input
+                  type="text"
+                  placeholder="Value..."
+                  value={endpoint.pathParams?.[param] || ''}
+                  onChange={(e) => handlePathParamChange(param, e.target.value)}
+                  className="flex-1 px-3 py-1.5 border-b border-slate-200 focus:border-blue-500 outline-none text-sm transition-colors bg-transparent"
+                />
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 text-xs text-slate-400">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>String</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Query Parameters */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Query Parameters</h4>
+          <button
+            onClick={addQueryParam}
+            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            <Plus className="w-3 h-3" />
+            Add
+          </button>
+        </div>
+        {(!endpoint.queryParams || endpoint.queryParams.length === 0) ? (
+          <div className="text-sm text-slate-400 italic">No query parameters</div>
+        ) : (
+          <div className="space-y-2">
+            {endpoint.queryParams.map((param: any, i: number) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="key"
+                  value={param.key}
+                  onChange={(e) => updateQueryParam(i, 'key', e.target.value)}
+                  className="flex-1 px-3 py-1.5 border border-slate-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-sm"
+                />
+                <span className="text-slate-400">=</span>
+                <input
+                  type="text"
+                  placeholder="value"
+                  value={param.value}
+                  onChange={(e) => updateQueryParam(i, 'value', e.target.value)}
+                  className="flex-1 px-3 py-1.5 border border-slate-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-sm"
+                />
+                <button
+                  onClick={() => removeQueryParam(i)}
+                  className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Headers (Collapsible) */}
+      <div>
+        <button
+          onClick={() => setHeadersExpanded(!headersExpanded)}
+          className="flex items-center gap-2 mb-3 text-xs font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-600 transition-colors"
+        >
+          {headersExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          Headers
+        </button>
+        {headersExpanded && (
+          <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+            {(endpoint.headers || []).map((header: any, i: number) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Header name"
+                  value={header.key}
+                  onChange={(e) => updateHeader(i, 'key', e.target.value)}
+                  className="flex-1 px-3 py-1.5 border border-slate-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-sm font-mono"
+                />
+                <span className="text-slate-400">:</span>
+                <input
+                  type="text"
+                  placeholder="value"
+                  value={header.value}
+                  onChange={(e) => updateHeader(i, 'value', e.target.value)}
+                  className="flex-1 px-3 py-1.5 border border-slate-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none text-sm font-mono"
+                />
+                <button
+                  onClick={() => removeHeader(i)}
+                  className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={addHeader}
+              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+              Add Header
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Request Body & Response */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* Request Body */}
+        <div>
+          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+            Request Body
+            <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">JSON</span>
+          </h4>
+          <div className="bg-slate-900 rounded-lg p-4 min-h-[200px] relative group">
+            <textarea
+              value={endpoint.body || ''}
+              onChange={(e) => onUpdate({ body: e.target.value })}
+              className="w-full h-full min-h-[180px] bg-transparent text-slate-300 font-mono text-xs outline-none resize-none"
+              placeholder='{\n  "key": "value"\n}'
+            />
+          </div>
+        </div>
+
+        {/* Response Preview */}
+        <div>
+          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+            Response
+            <select
+              value={endpoint.responseCode}
+              onChange={(e) => handleResponseCodeChange(Number(e.target.value))}
+              className={`text-[10px] px-1.5 py-0.5 rounded outline-none border-none ${
+                (endpoint.responseCode || 0) >= 200 && (endpoint.responseCode || 0) < 300 ? 'bg-emerald-100 text-emerald-600' :
+                (endpoint.responseCode || 0) >= 400 && (endpoint.responseCode || 0) < 500 ? 'bg-amber-100 text-amber-600' :
+                'bg-rose-100 text-rose-600'
+              }`}
+            >
+              {defaultResponseCodes.map((rc: any) => (
+                <option key={rc.code} value={rc.code}>
+                  {rc.code} {rc.label}
+                </option>
+              ))}
+            </select>
+          </h4>
+          <div className="bg-slate-50 rounded-lg p-4 min-h-[200px] border border-slate-200">
+            <textarea
+              value={endpoint.responseBody || ''}
+              onChange={(e) => onUpdate({ responseBody: e.target.value })}
+              className="w-full h-full min-h-[180px] bg-transparent text-slate-600 font-mono text-xs outline-none resize-none"
+              placeholder='{\n  "id": "123"\n}'
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

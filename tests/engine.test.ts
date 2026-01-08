@@ -436,6 +436,57 @@ test("Phase 1.5: API Builder section validates successfully", () => {
   }
 });
 
+test("Phase 1.5: API Builder section validates with enhanced fields", () => {
+  const experience = {
+    id: "exp-api-builder-enhanced",
+    title: "Enhanced API Builder",
+    sections: [
+      {
+        id: "section-001",
+        type: "api-builder",
+        title: "Define REST endpoint",
+        basePath: "/api/v1",
+        allowedMethods: ["GET", "POST", "PUT", "DELETE"],
+        defaultPath: "/users/:id",
+        defaultBody: '{\n  "name": "John Doe"\n}',
+        defaultHeaders: [
+          { key: "Content-Type", value: "application/json" },
+          { key: "Authorization", value: "Bearer token" },
+        ],
+        responseCodes: [
+          { code: 200, label: "OK", body: '{ "success": true }' },
+          { code: 201, label: "Created", body: '{ "id": "123" }' },
+          { code: 400, label: "Bad Request" },
+          { code: 404, label: "Not Found" },
+        ],
+      },
+      {
+        id: "section-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  const result = validateExperience(experience);
+
+  expect(result.success).toBe(true);
+  if (result.success) {
+    const section = result.data.sections[0];
+    if (section && section.type === "api-builder") {
+      expect(section.basePath).toBe("/api/v1");
+      expect(section.allowedMethods?.length).toBe(4);
+      expect(section.defaultPath).toBe("/users/:id");
+      expect(section.defaultBody).toContain("John Doe");
+      expect(section.defaultHeaders?.length).toBe(2);
+      expect(section.defaultHeaders?.[0]?.key).toBe("Content-Type");
+      expect(section.responseCodes?.length).toBe(4);
+      expect(section.responseCodes?.[0]?.code).toBe(200);
+      expect(section.responseCodes?.[1]?.body).toContain("123");
+    }
+  }
+});
+
 test("Phase 1.5: Data Mapper section validates successfully", () => {
   const experience = {
     id: "exp-data-mapper",
