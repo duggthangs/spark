@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Database, Monitor, ArrowRight, Link as LinkIcon, X } from 'lucide-react';
+import { Database, Monitor, ArrowRight, X, Plus, Check } from 'lucide-react';
 
 type Field = { id: string; label: string; type: string };
 type Connection = { sourceId: string; targetId: string };
@@ -8,11 +8,50 @@ export default function DataMapper({ data, value, onChange }: { data?: any, valu
   const [dragSource, setDragSource] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState<{x:number, y:number} | null>(null);
 
+  const [sources, setSources] = useState<Field[]>([]);
+  const [targets, setTargets] = useState<Field[]>([]);
+  
+  const [isAddingSource, setIsAddingSource] = useState(false);
+  const [newSourceName, setNewSourceName] = useState('');
+  const [isAddingTarget, setIsAddingTarget] = useState(false);
+  const [newTargetName, setNewTargetName] = useState('');
+
   const containerRef = useRef<HTMLDivElement>(null);
   // We'll use a map of refs to track field positions
   const fieldRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const connections: Connection[] = Array.isArray(value) ? value : [];
+
+  // Initialize data
+  useEffect(() => {
+    const initialSources: Field[] = data?.sources?.map((s: any) => ({
+        id: s.id,
+        label: s.label,
+        type: 'String' 
+    })) || [
+      { id: 'user.id', label: 'User ID', type: 'UUID' },
+      { id: 'user.firstName', label: 'First Name', type: 'String' },
+      { id: 'user.lastName', label: 'Last Name', type: 'String' },
+      { id: 'user.email', label: 'Email', type: 'String' },
+      { id: 'user.avatar', label: 'Avatar URL', type: 'URI' },
+      { id: 'meta.created', label: 'Created At', type: 'Date' },
+    ];
+
+    const initialTargets: Field[] = data?.targets?.map((t: any) => ({
+        id: t.id,
+        label: t.label,
+        type: 'String'
+    })) || [
+      { id: 'profile.uid', label: 'Profile ID', type: 'String' },
+      { id: 'profile.fullName', label: 'Full Name', type: 'String' },
+      { id: 'profile.image', label: 'Image Source', type: 'String' },
+      { id: 'profile.joined', label: 'Join Date', type: 'String' },
+      { id: 'settings.theme', label: 'Theme Preference', type: 'Enum' },
+    ];
+
+    setSources(initialSources);
+    setTargets(initialTargets);
+  }, [data]);
 
   // Report initial state
   useEffect(() => {
@@ -25,30 +64,23 @@ export default function DataMapper({ data, value, onChange }: { data?: any, valu
     onChange?.(newConnections);
   };
 
-  const sourceFields: Field[] = data?.sources?.map((s: any) => ({
-      id: s.id,
-      label: s.label,
-      type: 'String' 
-  })) || [
-    { id: 'user.id', label: 'User ID', type: 'UUID' },
-    { id: 'user.firstName', label: 'First Name', type: 'String' },
-    { id: 'user.lastName', label: 'Last Name', type: 'String' },
-    { id: 'user.email', label: 'Email', type: 'String' },
-    { id: 'user.avatar', label: 'Avatar URL', type: 'URI' },
-    { id: 'meta.created', label: 'Created At', type: 'Date' },
-  ];
+  const addSource = () => {
+    if (newSourceName.trim()) {
+      const id = newSourceName.toLowerCase().replace(/\s+/g, '.');
+      setSources([...sources, { id, label: newSourceName, type: 'String' }]);
+      setNewSourceName('');
+      setIsAddingSource(false);
+    }
+  };
 
-  const targetProps: Field[] = data?.targets?.map((t: any) => ({
-      id: t.id,
-      label: t.label,
-      type: 'String'
-  })) || [
-    { id: 'profile.uid', label: 'Profile ID', type: 'String' },
-    { id: 'profile.fullName', label: 'Full Name', type: 'String' },
-    { id: 'profile.image', label: 'Image Source', type: 'String' },
-    { id: 'profile.joined', label: 'Join Date', type: 'String' },
-    { id: 'settings.theme', label: 'Theme Preference', type: 'Enum' },
-  ];
+  const addTarget = () => {
+    if (newTargetName.trim()) {
+      const id = newTargetName.toLowerCase().replace(/\s+/g, '.');
+      setTargets([...targets, { id, label: newTargetName, type: 'String' }]);
+      setNewTargetName('');
+      setIsAddingTarget(false);
+    }
+  };
 
   const handleDragStart = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -56,7 +88,7 @@ export default function DataMapper({ data, value, onChange }: { data?: any, valu
   };
 
   const handleDragEnd = (targetId: string) => {
-    if (dragSource && dragSource !== targetId) {
+    if (dragSource) {
       // Avoid duplicates
       if (!connections.find(c => c.sourceId === dragSource && c.targetId === targetId)) {
         updateConnections([...connections, { sourceId: dragSource, targetId }]);
@@ -179,12 +211,21 @@ export default function DataMapper({ data, value, onChange }: { data?: any, valu
         </svg>
 
         {/* Source Column */}
-        <div className="w-1/3 bg-white border-r border-slate-200 p-6 z-20 flex flex-col gap-4">
-           <div className="flex items-center gap-2 text-slate-800 font-semibold mb-2">
-              <Database className="w-4 h-4 text-slate-500" />
-              Source Data
+        <div className="w-5/12 bg-white border-r border-slate-200 p-6 z-20 flex flex-col gap-4">
+           <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 text-slate-800 font-semibold">
+                 <Database className="w-4 h-4 text-slate-500" />
+                 Source Data
+              </div>
+              <button 
+                onClick={() => setIsAddingSource(true)}
+                className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-500 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
            </div>
-           {sourceFields.map(field => (
+           
+           {sources.map(field => (
              <div 
                key={field.id}
                ref={el => { if(el) fieldRefs.current.set(field.id, el) }}
@@ -203,24 +244,45 @@ export default function DataMapper({ data, value, onChange }: { data?: any, valu
                 <div className="absolute -right-1.5 w-3 h-3 bg-white border-2 border-slate-300 rounded-full group-hover:border-blue-500 group-hover:bg-blue-500 transition-colors" />
              </div>
            ))}
+
+           {isAddingSource && (
+             <div className="p-3 rounded-lg border-2 border-dashed border-blue-200 bg-blue-50/30 flex items-center gap-2">
+                <input 
+                  autoFocus
+                  className="flex-1 bg-transparent border-none text-sm focus:ring-0 p-0 text-slate-700 placeholder:text-slate-400"
+                  placeholder="Field name..."
+                  value={newSourceName}
+                  onChange={(e) => setNewSourceName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') addSource();
+                    if (e.key === 'Escape') setIsAddingSource(false);
+                  }}
+                />
+                <button onClick={addSource} className="text-blue-500 hover:text-blue-600">
+                  <Check className="w-4 h-4" />
+                </button>
+             </div>
+           )}
         </div>
 
         {/* Middle Spacer */}
-        <div className="flex-1 bg-slate-50/50 relative">
+        <div className="flex-1 bg-slate-50/50 relative overflow-hidden">
             {/* Could put transformation logic here later */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-               <ArrowRight className="w-32 h-32" />
+            <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+               <ArrowRight className="w-48 h-48" />
             </div>
             
             {/* Mapping List (Active Transformations) */}
             <div className="absolute top-6 left-0 right-0 px-8 pointer-events-auto">
-               <div className="space-y-2">
+               <div className="flex flex-wrap gap-2 justify-center">
                  {connections.map((conn, i) => (
-                    <div key={i} className="bg-white/80 backdrop-blur border border-slate-200 rounded-full px-3 py-1 text-xs flex items-center justify-between shadow-sm w-fit mx-auto gap-3">
-                       <span className="font-mono text-slate-600">{conn.sourceId}</span>
-                       <ArrowRight className="w-3 h-3 text-slate-300" />
-                       <span className="font-mono text-slate-600">{conn.targetId}</span>
-                       <button onClick={() => removeConnection(i)} className="hover:text-red-500"><X className="w-3 h-3" /></button>
+                    <div key={i} className="bg-white/90 backdrop-blur border border-slate-200 rounded-full pl-3 pr-2 py-1 text-[10px] flex items-center shadow-sm gap-2 animate-in fade-in zoom-in duration-200">
+                       <span className="font-mono text-slate-600 truncate max-w-[80px]">{conn.sourceId}</span>
+                       <ArrowRight className="w-3 h-3 text-slate-300 flex-shrink-0" />
+                       <span className="font-mono text-slate-600 truncate max-w-[80px]">{conn.targetId}</span>
+                       <button onClick={() => removeConnection(i)} className="p-0.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-red-500 transition-colors">
+                         <X className="w-3 h-3" />
+                       </button>
                     </div>
                  ))}
                </div>
@@ -228,12 +290,21 @@ export default function DataMapper({ data, value, onChange }: { data?: any, valu
         </div>
 
         {/* Target Column */}
-        <div className="w-1/3 bg-white border-l border-slate-200 p-6 z-20 flex flex-col gap-4">
-           <div className="flex items-center gap-2 text-slate-800 font-semibold mb-2">
-              <Monitor className="w-4 h-4 text-slate-500" />
-              Component Props
+        <div className="w-5/12 bg-white border-l border-slate-200 p-6 z-20 flex flex-col gap-4">
+           <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 text-slate-800 font-semibold">
+                 <Monitor className="w-4 h-4 text-slate-500" />
+                 Component Props
+              </div>
+              <button 
+                onClick={() => setIsAddingTarget(true)}
+                className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-emerald-500 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
            </div>
-           {targetProps.map(field => (
+
+           {targets.map(field => (
              <div 
                key={field.id}
                ref={el => { if(el) fieldRefs.current.set(field.id, el) }}
@@ -252,6 +323,25 @@ export default function DataMapper({ data, value, onChange }: { data?: any, valu
                 <div className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">{field.type}</div>
              </div>
            ))}
+
+           {isAddingTarget && (
+             <div className="p-3 rounded-lg border-2 border-dashed border-emerald-200 bg-emerald-50/30 flex items-center gap-2">
+                <input 
+                  autoFocus
+                  className="flex-1 bg-transparent border-none text-sm focus:ring-0 p-0 text-slate-700 placeholder:text-slate-400"
+                  placeholder="Prop name..."
+                  value={newTargetName}
+                  onChange={(e) => setNewTargetName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') addTarget();
+                    if (e.key === 'Escape') setIsAddingTarget(false);
+                  }}
+                />
+                <button onClick={addTarget} className="text-emerald-500 hover:text-emerald-600">
+                  <Check className="w-4 h-4" />
+                </button>
+             </div>
+           )}
         </div>
 
       </div>
