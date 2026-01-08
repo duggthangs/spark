@@ -107,7 +107,7 @@ export default function CodeSelectorSection({ data, value, onChange }: Props) {
       <div className={`grid grid-cols-1 ${gridCols} gap-4`}>
         {data.options.map((opt) => {
           const isSelected = selectedId === opt.id;
-          const optCode = codeState[opt.id] || opt.code;
+          const optCode = codeState[opt.id] ?? opt.code;
           const originalCode = opt.code;
           const isModified = optCode !== originalCode;
 
@@ -171,15 +171,16 @@ export default function CodeSelectorSection({ data, value, onChange }: Props) {
                     onChange={(e) => handleCodeChange(opt.id, e.target.value)}
                     onClick={(e) => e.stopPropagation()}
                     spellCheck={false}
-                    className="w-full h-48 p-3 bg-slate-900 text-slate-100 font-mono text-xs leading-relaxed rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                    className="w-full h-48 p-3 bg-slate-900 text-slate-100 font-mono text-[10px] leading-relaxed rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all shadow-inner"
                     placeholder="// Enter your code here..."
                   />
                 ) : (
-                  /* Preview placeholder when not selected */
+                  /* Read-only preview when not selected */
                   <div 
-                    className="h-48 flex items-center justify-center bg-slate-50 rounded-lg border border-dashed border-slate-200 text-slate-400 text-sm"
+                    className="w-full h-48 p-3 bg-slate-50 text-slate-400 font-mono text-[10px] leading-relaxed rounded-lg border border-slate-200 overflow-hidden relative transition-all"
                   >
-                    Click to select and edit
+                    <pre className="whitespace-pre-wrap font-mono text-[10px]">{optCode}</pre>
+                    <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-slate-50 to-transparent pointer-events-none" />
                   </div>
                 )}
               </div>
