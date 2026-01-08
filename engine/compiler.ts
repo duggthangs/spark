@@ -494,25 +494,45 @@ function formatCodeSelectorSection(section: CodeSelectorSection, result: any): s
 }
 
 /**
+ * Format a comment (reviewer feedback) if present.
+ */
+function formatComment(comment: string | undefined): string {
+  if (!comment || typeof comment !== "string" || !comment.trim()) return "";
+  
+  return `> **Reviewer Comment:**\n> ${comment.split('\n').join('\n> ')}\n\n`;
+}
+
+/**
  * Format a single section based on its type.
  */
-function formatSection(section: Section, result: any): string {
-  if (isInfoSection(section)) return formatInfoSection(section);
-  if (isChoiceSection(section)) return formatChoiceSection(section, result);
-  if (isRankSection(section)) return formatRankSection(section, result);
-  if (isTextReviewSection(section)) return formatTextReviewSection(section, result);
-  if (isDecisionSection(section)) return formatDecisionSection(section, result);
-  if (isKanbanSection(section)) return formatKanbanSection(section, result);
-  if (isImageChoiceSection(section)) return formatImageChoiceSection(section, result);
-  if (isApiBuilderSection(section)) return formatApiBuilderSection(section, result);
-  if (isDataMapperSection(section)) return formatDataMapperSection(section, result);
-  if (isLiveComponentSection(section)) return formatLiveComponentSection(section, result);
-  if (isNumericInputsSection(section)) return formatNumericInputsSection(section, result);
-  if (isCardDeckSection(section)) return formatCardDeckSection(section, result);
-  if (isCodeSelectorSection(section)) return formatCodeSelectorSection(section, result);
+function formatSection(section: Section, result: any, comment?: string): string {
+  let output = "";
+  
+  if (isInfoSection(section)) output = formatInfoSection(section);
+  else if (isChoiceSection(section)) output = formatChoiceSection(section, result);
+  else if (isRankSection(section)) output = formatRankSection(section, result);
+  else if (isTextReviewSection(section)) output = formatTextReviewSection(section, result);
+  else if (isDecisionSection(section)) output = formatDecisionSection(section, result);
+  else if (isKanbanSection(section)) output = formatKanbanSection(section, result);
+  else if (isImageChoiceSection(section)) output = formatImageChoiceSection(section, result);
+  else if (isApiBuilderSection(section)) output = formatApiBuilderSection(section, result);
+  else if (isDataMapperSection(section)) output = formatDataMapperSection(section, result);
+  else if (isLiveComponentSection(section)) output = formatLiveComponentSection(section, result);
+  else if (isNumericInputsSection(section)) output = formatNumericInputsSection(section, result);
+  else if (isCardDeckSection(section)) output = formatCardDeckSection(section, result);
+  else if (isCodeSelectorSection(section)) output = formatCodeSelectorSection(section, result);
+  else {
+    const fallback = section as any;
+    output = `### ${fallback.title || fallback.id}\n\n*Unknown section type: ${fallback.type}*\n\n`;
+  }
 
-  const fallback = section as any;
-  return `### ${fallback.title || fallback.id}\n\n*Unknown section type: ${fallback.type}*\n\n`;
+  // Append comment if present
+  const commentOutput = formatComment(comment);
+  if (commentOutput) {
+    output += commentOutput;
+  }
+
+  return output;
 }
 
 /**
@@ -520,9 +540,14 @@ function formatSection(section: Section, result: any): string {
  *
  * @param experience - The original experience definition
  * @param results - User's captured results keyed by section ID
+ * @param comments - Optional reviewer comments keyed by section ID
  * @returns Formatted Markdown string
  */
-export function compileSummary(experience: Experience, results: Results): string {
+export function compileSummary(
+  experience: Experience, 
+  results: Results,
+  comments?: Record<string, string>
+): string {
   const lines: string[] = [];
 
   // Header
@@ -540,7 +565,8 @@ export function compileSummary(experience: Experience, results: Results): string
   // Body - iterate through sections
   experience.sections.forEach((section) => {
     const result = results[section.id];
-    const formatted = formatSection(section, result);
+    const comment = comments?.[section.id];
+    const formatted = formatSection(section, result, comment);
 
     if (formatted.trim()) {
       lines.push(formatted);

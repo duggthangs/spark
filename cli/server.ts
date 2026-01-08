@@ -63,9 +63,9 @@ export async function startServer(
               const body = await req.json();
 
               // Extract results from the submission body
-              // Expected format: { result: Record<string, any>, experienceId?: string }
-              // Or directly: Record<string, any>
+              // Expected format: { answers: Record<string, any>, comments?: Record<string, string>, experienceId?: string }
               let results: Record<string, any> = {};
+              let comments: Record<string, string> | undefined;
 
               if (body.answers && typeof body.answers === "object") {
                 results = body.answers;
@@ -75,8 +75,13 @@ export async function startServer(
                 results = body;
               }
 
+              // Extract comments if present
+              if (body.comments && typeof body.comments === "object") {
+                comments = body.comments;
+              }
+
               // Compile Markdown summary
-              const markdown = compileSummary(experienceData, results);
+              const markdown = compileSummary(experienceData, results, comments);
 
               // Print Markdown to stdout
               console.log("=".repeat(80));
