@@ -194,6 +194,22 @@ function formatKanbanSection(section: KanbanSection, result: any): string {
   lines.push("");
 
   const columnResults = result && typeof result === "object" ? (result as Record<string, string[]>) : {};
+  
+  // Merge section.items (from schema) with result.__items__ (user-created/edited)
+  const schemaItems = section.items || [];
+  const customItems = (result && result.__items__) || [];
+  
+  // Create a map: itemId -> item data (custom items override schema items)
+  const itemsById = new Map();
+  schemaItems.forEach((item: any) => {
+    itemsById.set(item.id, { content: item.label, description: undefined });
+  });
+  customItems.forEach((item: any) => {
+    itemsById.set(item.id, { 
+      content: item.content || item.label, 
+      description: item.description 
+    });
+  });
 
   section.columns?.forEach((col) => {
     lines.push(`#### ${col.label}`);
@@ -203,10 +219,15 @@ function formatKanbanSection(section: KanbanSection, result: any): string {
       lines.push("*No items*");
     } else {
       itemIds.forEach((itemId: string) => {
-        const item = section.items?.find((i) => i.id === itemId);
-        if (item) {
-          lines.push(`- ${item.label} (${item.id})`);
+        const itemData = itemsById.get(itemId);
+        if (itemData) {
+          lines.push(`- ${itemData.content}`);
+          // Add description as indented blockquote if present
+          if (itemData.description && itemData.description.trim()) {
+            lines.push(`  > ${itemData.description}`);
+          }
         } else {
+          // Fallback if item not found
           lines.push(`- ${itemId}`);
         }
       });

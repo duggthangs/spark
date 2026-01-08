@@ -146,10 +146,10 @@ test("compiler: formats Kanban section", () => {
 
   expect(markdown).toContain("### Feature Backlog");
   expect(markdown).toContain("#### Must Have");
-  expect(markdown).toContain("- Search (search)");
-  expect(markdown).toContain("- Authentication (auth)");
+  expect(markdown).toContain("- Search");
+  expect(markdown).toContain("- Authentication");
   expect(markdown).toContain("#### Nice to Have");
-  expect(markdown).toContain("- Export (export)");
+  expect(markdown).toContain("- Export");
 });
 
 test("compiler: formats Image Choice section", () => {
@@ -590,9 +590,9 @@ test("compiler: generates complete summary with multiple sections", () => {
   expect(markdown).toContain("- React (react)");
   expect(markdown).toContain("### Prioritization");
   expect(markdown).toContain("#### Must Have");
-  expect(markdown).toContain("- Feature 1 (item1)");
+  expect(markdown).toContain("- Feature 1");
   expect(markdown).toContain("#### Nice to Have");
-  expect(markdown).toContain("- Feature 2 (item2)");
+  expect(markdown).toContain("- Feature 2");
   expect(markdown).toContain("### Complete");
   expect(markdown).toContain("✅ **Status:** Approved");
 });
