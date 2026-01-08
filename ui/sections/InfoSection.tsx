@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
+import type { InfoSection as InfoSectionType } from '../../engine/schema';
 
-export default function InfoSection({ data, onChange }: { data: any, onChange: (val: any) => void }) {
+export default function InfoSection({ data, onChange }: { data: InfoSectionType, onChange?: (val: any) => void }) {
   useEffect(() => {
     // Info sections don't have user input but we report "true" to indicate viewed
-    onChange(true);
+    onChange?.(true);
   }, []);
 
   return (

@@ -1,23 +1,25 @@
 import React, { useEffect } from 'react';
 import { Settings, Code, Eye } from 'lucide-react';
+import type { LiveComponentSection as LiveComponentSectionType } from '../../engine/schema';
 
-export default function LiveComponent({ data, value, onChange }: { data?: any, value?: any, onChange?: (val: any) => void }) {
+export default function LiveComponent({ data, value, onChange }: { data: LiveComponentSectionType, value?: any, onChange?: (val: any) => void }) {
   const defaultClasses = React.useMemo(() => ['bg-blue-500', 'text-white', 'p-6', 'rounded-xl'], []);
-  const defaultCode = React.useMemo(() => data?.defaultCode || `<div className="flex flex-col items-center">
+  const defaultCode = React.useMemo(() => data.defaultCode || `<div className="flex flex-col items-center">
   <h1 className="text-2xl font-bold">Hello World</h1>
   <p className="mt-2 opacity-90">Edit my classes!</p>
-</div>`, [data?.defaultCode]);
+</div>`, [data.defaultCode]);
 
   // Derive UI state from schema-ready string value
   const { activeClasses, customCode } = React.useMemo(() => {
     if (typeof value !== 'string') return { activeClasses: defaultClasses, customCode: defaultCode };
     
-    const classMatch = value.match(/className="([^"]+)"/);
-    const codeMatch = value.match(/>\n\s*([\s\S]*)\n<\/div>/);
+    // Robust parsing for quotes and whitespace
+    const classMatch = value.match(/className=["']([^"']+)["']/);
+    const codeMatch = value.match(/>\s*([\s\S]*?)\s*<\/div>\s*$/);
     
     return {
       activeClasses: (classMatch && classMatch[1]) ? classMatch[1].split(' ') : defaultClasses,
-      customCode: (codeMatch && codeMatch[1]) ? codeMatch[1] : defaultCode
+      customCode: (codeMatch && codeMatch[1]) ? codeMatch[1].trim() : defaultCode
     };
   }, [value, defaultClasses, defaultCode]);
 

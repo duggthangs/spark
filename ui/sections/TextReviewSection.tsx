@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
+import type { TextReviewSection as TextReviewSectionType } from '../../engine/schema';
 
-export default function TextReviewSection({ data, value, onChange }: { data: any, value: any, onChange: (val: any) => void }) {
+export default function TextReviewSection({ data, value, onChange }: { data: TextReviewSectionType, value?: any, onChange?: (val: any) => void }) {
   useEffect(() => {
-    if (!value) onChange("");
+    if (!value) onChange?.("");
   }, []);
 
   return (
@@ -15,7 +16,7 @@ export default function TextReviewSection({ data, value, onChange }: { data: any
       )}
       <textarea
         value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange?.(e.target.value)}
         placeholder="Leave your comments here..."
         className="w-full h-40 p-4 rounded-xl border-2 border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all resize-none"
       />

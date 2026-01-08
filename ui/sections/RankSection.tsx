@@ -1,9 +1,14 @@
 import React, { useEffect } from 'react';
 import { GripVertical } from 'lucide-react';
 import { useDragReorder } from '../hooks/useDragReorder';
+import type { RankSection as RankSectionType } from '../../engine/schema';
 
-export default function RankSection({ data, value, onChange }: { data: any, value: any, onChange: (val: any) => void }) {
-  const items: string[] = Array.isArray(value) ? value : data.items?.map((i: any) => i.id) || [];
+export default function RankSection({ data, value, onChange }: { data: RankSectionType, value?: any, onChange?: (val: any) => void }) {
+  // Safe default: if value is missing, use all item IDs from data
+  const items: string[] = Array.isArray(value) ? value : data.items?.map(i => i.id) || [];
+  
+  // Guard for onChange to satisfy hooks
+  const safeOnChange = (val: any) => onChange?.(val);
 
   const {
     getDragProps,
@@ -12,11 +17,11 @@ export default function RankSection({ data, value, onChange }: { data: any, valu
     isDragging,
     isDropTarget,
     showFinalDropZone,
-  } = useDragReorder({ items, onChange });
+  } = useDragReorder({ items, onChange: safeOnChange });
 
   useEffect(() => {
     if (!value && data.items) {
-      onChange(data.items.map((i: any) => i.id));
+      safeOnChange(data.items.map(i => i.id));
     }
   }, []);
 
@@ -33,7 +38,7 @@ export default function RankSection({ data, value, onChange }: { data: any, valu
     if (temp !== undefined && swapWith !== undefined) {
       newItems[idx] = swapWith;
       newItems[newIdx] = temp;
-      onChange(newItems);
+      safeOnChange(newItems);
     }
   };
 
@@ -44,7 +49,7 @@ export default function RankSection({ data, value, onChange }: { data: any, valu
       
       <div className="space-y-3">
         {items.map((itemId: string, index: number) => {
-          const item = data.items.find((i: any) => i.id === itemId);
+          const item = data.items.find(i => i.id === itemId);
           if (!item) return null;
 
           return (

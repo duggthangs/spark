@@ -1,21 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare } from 'lucide-react';
-import LiveComponent from './sections/LiveComponent';
-import ApiEndpointBuilder from './sections/ApiEndpointBuilder';
-import DataMapper from './sections/DataMapper';
-import KanbanBoard from './sections/KanbanBoard';
-import ImageChoice from './sections/ImageChoice';
-import InfoSection from './sections/InfoSection';
-import ChoiceSection from './sections/ChoiceSection';
-import RankSection from './sections/RankSection';
-import TextReviewSection from './sections/TextReviewSection';
-import CodeSelectorSection from './sections/CodeSelectorSection';
-import CardDeckSection from './sections/CardDeckSection';
-import NumericInputsSection from './sections/NumericInputsSection';
 import CommentPanel from './components/CommentPanel';
 import WizardLayout from './WizardLayout';
 import PlaygroundLayout from './PlaygroundLayout';
 import { MOCK_EXPERIENCE } from './mocks';
+import { getSectionComponent } from './registry';
 
 declare global {
   interface Window {
@@ -145,68 +134,28 @@ export default function App() {
   const renderSectionContent = (section: any) => {
     if (!section) return null;
 
+    const Component = getSectionComponent(section.type);
+
+    if (!Component) {
+        return <div className="p-8 text-slate-500">Unknown section type: {section.type}</div>;
+    }
+
     const value = answers[section.id];
     const onChange = (val: any) => handleAnswer(section.id, val);
+    const onSubmit = () => handleSubmit({ experienceId: experience?.id, result: "completed" });
 
-    let content: React.ReactNode;
+    const content = (
+        <Component 
+            data={section} 
+            value={value} 
+            onChange={onChange}
+            onSubmit={onSubmit}
+        />
+    );
 
-    switch (section.type) {
-      case 'info':
-        content = <InfoSection data={section} onChange={onChange} />;
-        break;
-      case 'choice':
-        content = <ChoiceSection data={section} value={value} onChange={onChange} />;
-        break;
-      case 'rank':
-        content = <RankSection data={section} value={value} onChange={onChange} />;
-        break;
-      case 'text-review':
-        content = <TextReviewSection data={section} value={value} onChange={onChange} />;
-        break;
-      case 'live-component':
-        content = <LiveComponent data={section} value={value} onChange={onChange} />;
-        break;
-      case 'api-builder':
-        content = <ApiEndpointBuilder data={section} value={value} onChange={onChange} />;
-        break;
-      case 'data-mapper':
-        content = <DataMapper data={section} value={value} onChange={onChange} />;
-        break;
-      case 'kanban':
-        content = <KanbanBoard data={section} value={value} onChange={onChange} />;
-        break;
-      case 'image-choice':
-        content = <ImageChoice data={section} value={value} onChange={onChange} />;
-        break;
-      case 'code-selector':
-        content = <CodeSelectorSection data={section} value={value} onChange={onChange} />;
-        break;
-      case 'card-deck':
-        content = <CardDeckSection data={section} value={value} onChange={onChange} />;
-        break;
-      case 'numeric-inputs':
-        content = <NumericInputsSection data={section} value={value} onChange={onChange} />;
-        break;
-      case 'decision':
-        // Decision section doesn't get a comment button
-        return (
-          <div className="flex flex-col items-center justify-center h-full max-w-2xl mx-auto text-center animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-8">
-              <div className="text-4xl">🎉</div>
-            </div>
-            <h2 className="text-3xl font-light text-slate-900 mb-6">All Set!</h2>
-            <p className="text-lg text-slate-600 mb-8">{section.message || "You've completed the setup. Ready to launch?"}</p>
-            <button
-              onClick={() => handleSubmit({ experienceId: experience?.id, result: "completed" })}
-              className="px-8 py-4 bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 hover:shadow-xl active:scale-95"
-            >
-              Submit Experience
-            </button>
-          </div>
-        );
-      default:
-        content = <div className="p-8 text-slate-500">Unknown section type: {section.type}</div>;
-        break;
+    // Decision section doesn't get a comment button and handles its own layout
+    if (section.type === 'decision') {
+         return content;
     }
 
     // Wrap with comment button
@@ -299,4 +248,3 @@ export default function App() {
     </>
   );
 }
-

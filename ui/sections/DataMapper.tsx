@@ -1,10 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Database, Monitor, ArrowRight, X, Plus, Check } from 'lucide-react';
+import type { DataMapperSection as DataMapperSectionType } from '../../engine/schema';
+import ConnectionLayer from '../components/ConnectionLayer';
+import type { Connection } from '../components/ConnectionLayer';
 
 type Field = { id: string; label: string; type: string };
-type Connection = { sourceId: string; targetId: string };
 
-export default function DataMapper({ data, value, onChange }: { data?: any, value?: any, onChange?: (val: any) => void }) {
+export default function DataMapper({ data, value, onChange }: { data: DataMapperSectionType, value?: any, onChange?: (val: any) => void }) {
   const [dragSource, setDragSource] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState<{x:number, y:number} | null>(null);
 
@@ -24,7 +26,7 @@ export default function DataMapper({ data, value, onChange }: { data?: any, valu
 
   // Initialize data
   useEffect(() => {
-    const initialSources: Field[] = data?.sources?.map((s: any) => ({
+    const initialSources: Field[] = data.sources?.map((s: any) => ({
         id: s.id,
         label: s.label,
         type: 'String' 
@@ -37,7 +39,7 @@ export default function DataMapper({ data, value, onChange }: { data?: any, valu
       { id: 'meta.created', label: 'Created At', type: 'Date' },
     ];
 
-    const initialTargets: Field[] = data?.targets?.map((t: any) => ({
+    const initialTargets: Field[] = data.targets?.map((t: any) => ({
         id: t.id,
         label: t.label,
         type: 'String'
@@ -159,56 +161,12 @@ export default function DataMapper({ data, value, onChange }: { data?: any, valu
         ref={containerRef} 
         className="relative flex-1 bg-slate-50 rounded-xl border border-slate-200 overflow-hidden flex"
       >
-        {/* SVG Layer */}
-        <svg className="absolute inset-0 pointer-events-none w-full h-full z-10 overflow-visible">
-          <defs>
-             <marker id="head" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-               <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" />
-             </marker>
-          </defs>
-          
-          {/* Existing connections */}
-          {connections.map((conn, i) => {
-            const start = getCoords(conn.sourceId, 'right');
-            const end = getCoords(conn.targetId, 'left');
-            
-            // Bezier curve
-            const controlPointOffset = Math.abs(end.x - start.x) / 2;
-            const path = `M ${start.x} ${start.y} C ${start.x + controlPointOffset} ${start.y}, ${end.x - controlPointOffset} ${end.y}, ${end.x} ${end.y}`;
-
-            return (
-              <g key={i}>
-                <path 
-                  d={path} 
-                  stroke="#cbd5e1" 
-                  strokeWidth="2" 
-                  fill="none" 
-                  className="transition-all"
-                />
-                <path 
-                  d={path} 
-                  stroke="#64748b" 
-                  strokeWidth="2" 
-                  fill="none" 
-                  markerEnd="url(#head)"
-                  className="animate-draw"
-                  strokeDasharray="5"
-                />
-              </g>
-            );
-          })}
-
-          {/* Active drag line */}
-          {dragSource && mousePos && (
-             <path 
-               d={`M ${getCoords(dragSource, 'right').x} ${getCoords(dragSource, 'right').y} L ${mousePos.x} ${mousePos.y}`}
-               stroke="#3b82f6" 
-               strokeWidth="2" 
-               strokeDasharray="4"
-               fill="none" 
-             />
-          )}
-        </svg>
+        <ConnectionLayer 
+          connections={connections} 
+          dragSource={dragSource} 
+          mousePos={mousePos} 
+          getCoords={getCoords} 
+        />
 
         {/* Source Column */}
         <div className="w-5/12 bg-white border-r border-slate-200 p-6 z-20 flex flex-col gap-4">

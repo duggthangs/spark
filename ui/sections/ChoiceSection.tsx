@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
+import { Check } from 'lucide-react';
+import type { ChoiceSection as ChoiceSectionType } from '../../engine/schema';
 
-export default function ChoiceSection({ data, value, onChange }: { data: any, value: any, onChange: (val: any) => void }) {
+export default function ChoiceSection({ data, value, onChange }: { data: ChoiceSectionType, value?: any, onChange?: (val: any) => void }) {
   const selected = Array.isArray(value) ? value : value ? [value] : [];
 
   useEffect(() => {
@@ -13,12 +15,12 @@ export default function ChoiceSection({ data, value, onChange }: { data: any, va
   const toggle = (id: string) => {
     if (data.multiSelect) {
       if (selected.includes(id)) {
-        onChange(selected.filter(i => i !== id));
+        onChange?.(selected.filter((i: string) => i !== id));
       } else {
-        onChange([...selected, id]);
+        onChange?.([...selected, id]);
       }
     } else {
-      onChange(id);
+      onChange?.(id);
     }
   };
 
@@ -28,7 +30,7 @@ export default function ChoiceSection({ data, value, onChange }: { data: any, va
       {data.description && <p className="text-slate-500 mb-8">{data.description}</p>}
       
       <div className="space-y-3">
-        {data.options.map((opt: any) => {
+        {data.options.map((opt) => {
           const isSelected = selected.includes(opt.id);
           return (
             <button
@@ -46,9 +48,7 @@ export default function ChoiceSection({ data, value, onChange }: { data: any, va
                 </span>
                 {isSelected && (
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <Check className="w-4 h-4 text-white" />
                   </div>
                 )}
               </div>
