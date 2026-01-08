@@ -5,11 +5,40 @@ import { openBrowser } from "./open-browser";
 
 const MAX_PORT_ATTEMPTS = 20;
 
+async function getLocalIP(): Promise<string | null> {
+  try {
+    // Try en0 first (usually WiFi on macOS)
+    const proc = Bun.spawn(["ipconfig", "getifaddr", "en0"]);
+    const text = await new Response(proc.stdout).text();
+    const ip = text.trim();
+    if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+      return ip;
+    }
+  } catch (e) {
+    // Ignore error, try next interface
+  }
+
+  try {
+    // Try en1 as fallback (might be Ethernet or WiFi)
+    const proc = Bun.spawn(["ipconfig", "getifaddr", "en1"]);
+    const text = await new Response(proc.stdout).text();
+    const ip = text.trim();
+    if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+      return ip;
+    }
+  } catch (e) {
+    // Ignore error
+  }
+
+  return null;
+}
+
 export async function startServer(
   filePath: string,
   port = 3000,
   open = true,
-  explicitPort = false
+  explicitPort = false,
+  local = false
 ) {
   console.log(`Loading experience from: ${filePath}`);
   
@@ -45,11 +74,13 @@ export async function startServer(
   // Try to start server, auto-incrementing port if needed
   let actualPort = port;
   let server: ReturnType<typeof Bun.serve> | null = null;
+  const hostname = local ? "0.0.0.0" : "localhost";
 
   for (let attempt = 0; attempt < MAX_PORT_ATTEMPTS; attempt++) {
     try {
       server = Bun.serve({
         port: actualPort,
+        hostname,
         async fetch(req) {
           const url = new URL(req.url);
 
@@ -156,7 +187,20 @@ export async function startServer(
     process.exit(1);
   }
 
-  console.log(`IAEE CLI running at http://localhost:${actualPort}`);
+  // Display server URLs
+  if (local) {
+    const localIP = await getLocalIP();
+    if (localIP) {
+      console.log(`IAEE CLI running at http://${localIP}:${actualPort}`);
+      console.log(`                      http://localhost:${actualPort}`);
+    } else {
+      console.log(`IAEE CLI running at http://0.0.0.0:${actualPort}`);
+      console.log(`                      http://localhost:${actualPort}`);
+      console.log("(Could not detect local IP address)");
+    }
+  } else {
+    console.log(`IAEE CLI running at http://localhost:${actualPort}`);
+  }
   console.log("Press Ctrl+C to exit manually");
 
   if (open) {
