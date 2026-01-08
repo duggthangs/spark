@@ -1,15 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, GripVertical } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, GripVertical, Trash2 } from 'lucide-react';
 
-type Task = { id: string; content: string; tag: string };
+type Task = { id: string; content: string; description?: string };
 type Column = { id: string; title: string; tasks: Task[] };
 
 export default function KanbanBoard({ data, value, onChange }: { data?: any, value?: any, onChange?: (val: any) => void }) {
+  
+  // State for inline editing
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const editingCardRef = useRef<HTMLDivElement>(null);
   
   // Reconstruct UI state from schema-ready value
   const columns: Column[] = React.useMemo(() => {
     const rawColumns = data?.columns || [];
     const rawItems = data?.items || [];
+    const customItems = value?.__items__ || [];
+    
+    // Merge items: custom items override raw items
+    const allItems = [...rawItems, ...customItems];
+    const itemsById = new Map(allItems.map((item: any) => [item.id, item]));
     
     // If value is a Record<string, string[]>, use it to arrange items
     if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -19,11 +28,11 @@ export default function KanbanBoard({ data, value, onChange }: { data?: any, val
                 id: col.id,
                 title: col.label,
                 tasks: itemIds.map((id: string) => {
-                    const item = rawItems.find((i: any) => i.id === id);
+                    const item = itemsById.get(id);
                     return {
                         id: id,
-                        content: item?.label || id,
-                        tag: 'General'
+                        content: item?.label || item?.content || '',
+                        description: item?.description || ''
                     };
                 })
             };
@@ -36,11 +45,25 @@ export default function KanbanBoard({ data, value, onChange }: { data?: any, val
         title: col.label,
         tasks: rawItems.filter((item: any) => item.columnId === col.id).map((item: any) => ({
             id: item.id,
-            content: item.label,
-            tag: 'General'
+            content: item.label || item.content,
+            description: item.description || ''
         }))
     }));
   }, [data, value]);
+
+  // Click outside to close edit mode
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (editingCardRef.current && !editingCardRef.current.contains(event.target as Node)) {
+        setEditingTaskId(null);
+      }
+    };
+
+    if (editingTaskId) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [editingTaskId]);
 
   // Report initial state
   useEffect(() => {
@@ -60,7 +83,7 @@ export default function KanbanBoard({ data, value, onChange }: { data?: any, val
     newColumns.forEach(col => {
         schemaReadyValue[col.id] = col.tasks.map(t => t.id);
     });
-    onChange?.(schemaReadyValue);
+    onChange?.({ ...value, ...schemaReadyValue });
   };
 
   const handleDragStart = (e: React.DragEvent, taskId: string, sourceColId: string) => {
@@ -93,6 +116,74 @@ export default function KanbanBoard({ data, value, onChange }: { data?: any, val
     }));
 
     setDraggedTask(null);
+  };
+
+  const handleAddTask = (columnId: string) => {
+    const newTask = {
+      id: `task-${Date.now()}`,
+      content: '',
+      description: ''
+    };
+    
+    // Get existing items
+    const rawItems = data?.items || [];
+    const customItems = value?.__items__ || [];
+    const allItems = [...rawItems, ...customItems, newTask];
+    
+    // Update value to include new task in column
+    const newValue = {
+      ...value,
+      __items__: allItems,
+      [columnId]: [...(value?.[columnId] || []), newTask.id]
+    };
+    
+    onChange?.(newValue);
+    setEditingTaskId(newTask.id); // Auto-enter edit mode
+  };
+
+  const handleEditTask = (taskId: string, field: string, newValue: string) => {
+    const rawItems = data?.items || [];
+    const customItems = value?.__items__ || [];
+    const allItems = [...rawItems, ...customItems];
+    
+    // Find and update the task
+    const updatedItems = allItems.map((item: any) => 
+      item.id === taskId ? { ...item, [field]: newValue } : item
+    );
+    
+    // Filter to only custom items (user-created or edited)
+    const customItemIds = new Set(customItems.map((i: any) => i.id));
+    const finalItems = updatedItems.filter((item: any) => 
+      customItemIds.has(item.id) || item.id === taskId
+    );
+    
+    onChange?.({ ...value, __items__: finalItems });
+  };
+
+  const handleDeleteTask = (taskId: string, columnId: string) => {
+    const customItems = value?.__items__ || [];
+    const updatedItems = customItems.filter((item: any) => item.id !== taskId);
+    const updatedColumn = (value?.[columnId] || []).filter((id: string) => id !== taskId);
+    
+    onChange?.({
+      ...value,
+      __items__: updatedItems,
+      [columnId]: updatedColumn
+    });
+    
+    if (editingTaskId === taskId) {
+      setEditingTaskId(null);
+    }
+  };
+
+  const handleTaskClick = (taskId: string) => {
+    setEditingTaskId(taskId);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setEditingTaskId(null);
+    }
   };
 
   return (
@@ -130,26 +221,72 @@ export default function KanbanBoard({ data, value, onChange }: { data?: any, val
 
             {/* Task List */}
             <div className="flex-1 space-y-3">
-              {col.tasks.map(task => (
-                <div
-                  key={task.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, task.id, col.id)}
-                  className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-base font-medium text-slate-700">{task.content}</p>
-                    <GripVertical className="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              {col.tasks.map(task => {
+                const isEditing = editingTaskId === task.id;
+                
+                return (
+                  <div
+                    key={task.id}
+                    ref={isEditing ? editingCardRef : null}
+                    draggable={!isEditing}
+                    onDragStart={(e) => !isEditing && handleDragStart(e, task.id, col.id)}
+                    className={`bg-white p-5 rounded-xl shadow-sm border border-slate-100 transition-all duration-200 group ${
+                      isEditing 
+                        ? 'ring-2 ring-blue-500/20 shadow-md' 
+                        : 'cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-0.5'
+                    }`}
+                  >
+                    {isEditing ? (
+                      // Edit Mode
+                      <div className="space-y-3" onKeyDown={handleKeyDown}>
+                        <div className="flex items-start justify-between gap-3">
+                          <input
+                            type="text"
+                            value={task.content}
+                            onChange={(e) => handleEditTask(task.id, 'content', e.target.value)}
+                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            placeholder="Task name..."
+                            autoFocus
+                          />
+                          <button
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              handleDeleteTask(task.id, col.id);
+                            }}
+                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete task"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <textarea
+                          value={task.description || ''}
+                          onChange={(e) => handleEditTask(task.id, 'description', e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-600 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+                          placeholder="Add description..."
+                          rows={2}
+                        />
+                      </div>
+                    ) : (
+                      // View Mode
+                      <div onClick={() => handleTaskClick(task.id)} className="cursor-pointer">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-base font-medium text-slate-700">{task.content || 'Untitled Task'}</p>
+                          <GripVertical className="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                        </div>
+                        {task.description && (
+                          <p className="mt-2 text-sm text-slate-500 line-clamp-2">{task.description}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="mt-3 flex items-center">
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded-md">
-                      {task.tag}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               
-              <button className="w-full py-3 flex items-center justify-center gap-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl border border-transparent hover:border-slate-200 border-dashed text-sm transition-all">
+              <button 
+                onClick={() => handleAddTask(col.id)}
+                className="w-full py-3 flex items-center justify-center gap-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl border border-transparent hover:border-slate-200 border-dashed text-sm transition-all"
+              >
                 <Plus className="w-4 h-4" />
                 Add Item
               </button>
