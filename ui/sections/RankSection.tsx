@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { GripVertical } from 'lucide-react';
+import { useDragReorder } from '../hooks/useDragReorder';
 
 export default function RankSection({ data, value, onChange }: { data: any, value: any, onChange: (val: any) => void }) {
-  const items = Array.isArray(value) ? value : data.items?.map((i: any) => i.id) || [];
+  const items: string[] = Array.isArray(value) ? value : data.items?.map((i: any) => i.id) || [];
 
-  // Drag-and-drop state
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
+  const {
+    getDragProps,
+    getDropZoneProps,
+    getFinalDropZoneProps,
+    isDragging,
+    isDropTarget,
+    showFinalDropZone,
+  } = useDragReorder({ items, onChange });
 
   useEffect(() => {
     if (!value && data.items) {
@@ -22,68 +28,13 @@ export default function RankSection({ data, value, onChange }: { data: any, valu
     if (newIdx < 0 || newIdx >= items.length) return;
     
     const newItems = [...items];
-    [newItems[idx], newItems[newIdx]] = [newItems[newIdx], newItems[idx]];
-    onChange(newItems);
-  };
-
-  // Drag-and-drop handlers
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
-    setDropTargetIndex(index);
-  };
-
-  const handleDragLeave = () => {
-    setDropTargetIndex(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === targetIndex) {
-      setDraggedIndex(null);
-      setDropTargetIndex(null);
-      return;
+    const temp = newItems[idx];
+    const swapWith = newItems[newIdx];
+    if (temp !== undefined && swapWith !== undefined) {
+      newItems[idx] = swapWith;
+      newItems[newIdx] = temp;
+      onChange(newItems);
     }
-
-    // Reorder the items
-    const newItems = [...items];
-    const [dragged] = newItems.splice(draggedIndex, 1);
-    newItems.splice(targetIndex, 0, dragged);
-    onChange(newItems);
-
-    setDraggedIndex(null);
-    setDropTargetIndex(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-    setDropTargetIndex(null);
-  };
-
-  // Handle drop on final zone (after last item)
-  const handleDropOnFinalZone = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (draggedIndex === null) return;
-
-    const targetIndex = items.length - 1;
-    if (draggedIndex === targetIndex) {
-      setDraggedIndex(null);
-      setDropTargetIndex(null);
-      return;
-    }
-
-    const newItems = [...items];
-    const [dragged] = newItems.splice(draggedIndex, 1);
-    newItems.push(dragged);
-    onChange(newItems);
-
-    setDraggedIndex(null);
-    setDropTargetIndex(null);
   };
 
   return (
@@ -96,28 +47,21 @@ export default function RankSection({ data, value, onChange }: { data: any, valu
           const item = data.items.find((i: any) => i.id === itemId);
           if (!item) return null;
 
-          const isDragging = draggedIndex === index;
-          const isDropTarget = dropTargetIndex === index && draggedIndex !== index;
-
           return (
             <div 
               key={item.id} 
               className="relative"
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, index)}
+              {...getDropZoneProps(index)}
             >
               {/* Drop indicator line - appears above the target item */}
-              {isDropTarget && (
+              {isDropTarget(index) && (
                 <div className="absolute -top-1.5 left-4 right-4 h-0.5 bg-blue-500 rounded-full z-10" />
               )}
               
               <div 
-                draggable
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragEnd={handleDragEnd}
+                {...getDragProps(index)}
                 className={`flex items-center gap-4 bg-white p-4 rounded-xl border-2 shadow-sm group transition-all duration-150 ${
-                  isDragging 
+                  isDragging(index) 
                     ? 'opacity-50 border-blue-300 scale-[0.98]' 
                     : 'border-slate-100 cursor-grab active:cursor-grabbing'
                 }`}
@@ -158,15 +102,10 @@ export default function RankSection({ data, value, onChange }: { data: any, valu
         })}
 
         {/* Final drop zone - for dropping after the last item */}
-        {draggedIndex !== null && draggedIndex !== items.length - 1 && (
+        {showFinalDropZone && (
           <div 
             className="h-12 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 text-sm transition-colors hover:border-blue-300 hover:bg-blue-50/50"
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDropTargetIndex(items.length);
-            }}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDropOnFinalZone}
+            {...getFinalDropZoneProps()}
           >
             Drop here to move to last
           </div>

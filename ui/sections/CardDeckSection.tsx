@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, GripVertical, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { useDragReorder } from '../hooks/useDragReorder';
 
 interface CardDeckData {
   id: string;
@@ -19,13 +20,35 @@ const MAX_CARDS = 10;
 
 export default function CardDeckSection({ data, value, onChange }: Props) {
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // Get template fields
   const templateFields = Object.keys(data.template || {});
 
   // Initialize cards from value or initialCards
   const cards = value || data.initialCards || [];
+
+  // Handle expanded index adjustment when cards are reordered
+  const handleReorder = (fromIndex: number, toIndex: number) => {
+    if (expandedCardIndex === fromIndex) {
+      setExpandedCardIndex(toIndex);
+    } else if (expandedCardIndex !== null) {
+      if (fromIndex < expandedCardIndex && toIndex >= expandedCardIndex) {
+        setExpandedCardIndex(expandedCardIndex - 1);
+      } else if (fromIndex > expandedCardIndex && toIndex <= expandedCardIndex) {
+        setExpandedCardIndex(expandedCardIndex + 1);
+      }
+    }
+  };
+
+  const {
+    getDragProps,
+    getDropZoneProps,
+    isDragging,
+  } = useDragReorder({
+    items: cards,
+    onChange: onChange || (() => {}),
+    onReorder: handleReorder,
+  });
 
   // Report initial state on mount
   useEffect(() => {
@@ -74,47 +97,6 @@ export default function CardDeckSection({ data, value, onChange }: Props) {
     setExpandedCardIndex(expandedCardIndex === index ? null : index);
   };
 
-  // Drag and drop handlers (consistent with KanbanBoard)
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === targetIndex) {
-      setDraggedIndex(null);
-      return;
-    }
-
-    const newCards = [...cards];
-    const draggedCard = newCards.splice(draggedIndex, 1)[0];
-    if (!draggedCard) return;
-    newCards.splice(targetIndex, 0, draggedCard);
-    onChange?.(newCards);
-
-    // Update expanded index if needed
-    if (expandedCardIndex === draggedIndex) {
-      setExpandedCardIndex(targetIndex);
-    } else if (expandedCardIndex !== null) {
-      if (draggedIndex < expandedCardIndex && targetIndex >= expandedCardIndex) {
-        setExpandedCardIndex(expandedCardIndex - 1);
-      } else if (draggedIndex > expandedCardIndex && targetIndex <= expandedCardIndex) {
-        setExpandedCardIndex(expandedCardIndex + 1);
-      }
-    }
-
-    setDraggedIndex(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-  };
-
   // Get preview text for collapsed card (first 1-2 non-empty fields)
   const getCardPreview = (card: Record<string, any>) => {
     const previewFields = templateFields.slice(0, 2);
@@ -136,18 +118,14 @@ export default function CardDeckSection({ data, value, onChange }: Props) {
       <div className="space-y-3">
         {cards.map((card, index) => {
           const isExpanded = expandedCardIndex === index;
-          const isDragging = draggedIndex === index;
 
           return (
             <div
               key={card.id || index}
-              draggable
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, index)}
-              onDragEnd={handleDragEnd}
+              {...getDragProps(index)}
+              {...getDropZoneProps(index)}
               className={`bg-white rounded-xl border transition-all duration-200 ${
-                isDragging
+                isDragging(index)
                   ? 'opacity-50 border-blue-300 shadow-lg'
                   : 'border-slate-200 shadow-sm hover:shadow-md'
               }`}
