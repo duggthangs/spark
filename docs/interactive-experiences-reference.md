@@ -52,14 +52,19 @@ This document outlines interactive experiences that make reviewing plans delight
 **Data Capture**:
 ```json
 {
-  "items": [
-    { "id": "search", "label": "Search", "column": "must-have", "crossed": false },
-    { "id": "export", "label": "Export", "column": "nice-to-have", "crossed": true }
+  "must-have": ["search", "login"],
+  "nice-to-have": ["export"],
+  "deferred": [],
+  "__items__": [
+    { "id": "search", "content": "Search", "description": "Global search..." },
+    { "id": "login", "content": "Login", "description": "Auth flow..." }
   ]
 }
 ```
 
 **Section Type Required**: `KanbanBoard`
+
+**Implementation Status**: ✅ Implemented
 
 ---
 
@@ -75,15 +80,15 @@ This document outlines interactive experiences that make reviewing plans delight
 **Data Capture**:
 ```json
 {
-  "allocations": [
-    { "id": "feature-a", "label": "Feature A", "value": 40 },
-    { "id": "feature-b", "label": "Feature B", "value": 35 },
-    { "id": "feature-c", "label": "Feature C", "value": 25 }
-  ]
+  "feature-a": 40,
+  "feature-b": 35,
+  "feature-c": 25
 }
 ```
 
 **Section Type Required**: `NumericInputs`
+
+**Implementation Status**: ✅ Implemented
 
 ---
 
@@ -278,13 +283,22 @@ This document outlines interactive experiences that make reviewing plans delight
 **Data Capture**:
 ```json
 {
-  "method": "POST",
-  "path": "/api/v1/users",
-  "bodySchema": { "type": "object", "properties": { "name": "string" } }
+  "endpoints": [
+    {
+      "id": "ep-1",
+      "method": "POST",
+      "path": "/api/v1/users",
+      "description": "Create user",
+      "body": "{\"name\": \"string\"}",
+      "responseCode": 201
+    }
+  ]
 }
 ```
 
 **Section Type Required**: `ApiEndpointBuilder`
+
+**Implementation Status**: ✅ Implemented
 
 ---
 
@@ -363,20 +377,20 @@ This document outlines interactive experiences that make reviewing plans delight
 
 | Experience | Section Type Required | Status |
 |------------|----------------------|--------|
-| Stack Selector | `ChoiceWithCustomAdd` | New |
-| Kanban Prioritization | `KanbanBoard` | New |
-| Budget Allocator | `NumericInputs` | New |
-| Timeline Sequencing | `Rank` (with metadata) | Existing, extend |
-| Persona Selector | `CardDeck` | New |
-| Confidence Slider | `Slider` + `TextReview` | New |
-| Logic Tree | `DecisionTree` | New |
-| Concept Matcher | `ConceptMatcher` | New |
-| Constraint Builder | `ConstraintBuilder` | New |
-| Image Choice | `ImageChoice` | New |
-| API Endpoint Builder | `ApiEndpointBuilder` | New |
-| Live Component | `LiveComponent` | New |
-| Data Mapper | `DataMapper` | New |
-| Code Selector | `CodeSelector` | New |
+| Stack Selector | `Choice` | ✅ Implemented |
+| Kanban Prioritization | `KanbanBoard` | ✅ Implemented |
+| Budget Allocator | `NumericInputs` | ✅ Implemented |
+| Timeline Sequencing | `Rank` | ✅ Implemented |
+| Persona Selector | `CardDeck` | ✅ Implemented |
+| Confidence Slider | `Slider` (TBD) | ⏳ Planned |
+| Logic Tree | `DecisionTree` (TBD) | ⏳ Planned |
+| Concept Matcher | `ConceptMatcher` (TBD) | ⏳ Planned |
+| Constraint Builder | `ConstraintBuilder` (TBD) | ⏳ Planned |
+| Image Choice | `ImageChoice` | ✅ Implemented |
+| API Endpoint Builder | `ApiEndpointBuilder` | ✅ Implemented |
+| Live Component | `LiveComponent` | ✅ Implemented |
+| Data Mapper | `DataMapper` | ✅ Implemented |
+| Code Selector | `CodeSelector` | ✅ Implemented |
 
 ---
 

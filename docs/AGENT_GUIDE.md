@@ -15,7 +15,22 @@ IAEE (Interactive Agent Experience Engine) replaces static markdown plans with d
 - **Context is Key**: Use `type: "info"` sections early in the wizard to frame the problem before asking for decisions.
 
 ## 3. Supported Experiences
-For a full list of interactive types (Kanban, Data Mapper, API Builder, etc.) and their data structures, refer directly to the **[Zod Schema Definitions](../engine/schema.ts)**.
+For a full list of interactive types, refer to the **[Interactive Experiences Reference](./interactive-experiences-reference.md)**. 
+
+### Core Hardened Types:
+- **`info`**: Read-only context and instructions.
+- **`choice`**: Single or multi-select with optional custom additions.
+- **`rank`**: Draggable reordering for prioritization.
+- **`text-review`**: Simple text feedback area.
+- **`kanban`**: Multi-column task organization and prioritization.
+- **`api-builder`**: Interactive HTTP endpoint definition (Method, Path, Body, Response).
+- **`data-mapper`**: Visual linking between source and target data fields.
+- **`live-component`**: React/Tailwind code editor with immediate preview.
+- **`code-selector`**: Comparison tool for multiple code implementations.
+- **`numeric-inputs`**: Resource allocation/budgeting with real-time totals.
+- **`card-deck`**: Structured data entry for entities like Personas or Stories.
+- **`image-choice`**: Visual selection from a gallery.
+- **`decision`**: The mandatory approval/rejection gate.
 
 ## 4. Tips for Delight
 - **Start with Info**: Don't jump straight into choices. Contextualize the plan first.

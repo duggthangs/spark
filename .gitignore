@@ -34,3 +34,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .DS_Store
 journal.log
 .opencode
+
+# binary
+iaee
+docs/bun
+

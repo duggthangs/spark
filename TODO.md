@@ -10,34 +10,36 @@
 - [x] Decide packaging targets (Host Only / Bun)
 - [x] Testing strategy (UI First)
 
-## Implementation Phases
+## Implementation Phases (Completed)
 
 ### Phase 1: Core Engine & Contracts
-*Goal: Define the data structures and validation logic.*
-- [ ] Initialize project structure (bun init)
-- [ ] Implement Zod schemas for `Experience` and `Section` (Base, Info, Choice, Decision)
-- [ ] Create `SectionRegistry` structure for static registration of section types
-- [ ] Implement `validate()` logic for the schemas
+- [x] Initialize project structure (bun init)
+- [x] Implement Zod schemas for `Experience` and `Section`
+- [x] Create `SectionRegistry` structure
+- [x] Implement `validate()` logic
 
-### Phase 2: Interactive UI (The "Experience")
-*Goal: Build the React frontend that users interact with.*
-- [ ] Scaffold `WizardShell` layout (Title, Progress Stepper, Content Area)
-- [ ] Implement Session State Management (React Context/Zustand) for tracking answers
-- [ ] Build `InfoSection` component
-- [ ] Build `ChoiceSection` component
-- [ ] Build `DecisionSection` component (The final gate)
-- [ ] Implement Navigation logic (Back/Next with validation blocks)
+### Phase 2: Interactive UI
+- [x] Scaffold `WizardShell` layout
+- [x] Implement Session State Management
+- [x] Build core and complex section components (12+ types)
+- [x] Implement UI Registry Pattern for decoupling
 
 ### Phase 3: CLI Runtime & Integration
-*Goal: Connect the local machine to the web UI.*
-- [ ] Create CLI entry point (`cli/run.ts`) with argument parsing
-- [ ] Implement `Bun.serve` to serve the React SPA
-- [ ] Create API routes: `GET /api/experience` (serve JSON) and `POST /api/submit` (receive results)
-- [ ] Implement "Browser Open" logic to auto-launch the experience
+- [x] Create CLI entry point (`cli/index.ts`)
+- [x] Implement `Bun.serve` with HMR
+- [x] Create API routes: `GET /api/experience` and `POST /api/submit`
+- [x] Implement "Browser Open" logic
 
 ### Phase 4: Output & Delivery
-*Goal: Generate the artifacts and package the tool.*
-- [ ] Implement `SummaryCompiler` (Transform result JSON -> Markdown)
-- [ ] Wire up final submission to print Summary to Stdout/File
-- [ ] Configure `bun build --compile` for single-binary output
-- [ ] Manual End-to-End verification with a sample `experience.json`
+- [x] Implement `SummaryCompiler` (Markdown generation)
+- [x] Wire up final submission to print Summary
+- [x] Configure build process
+
+## Phase 5: Hardening & Maintenance (In Progress)
+- [ ] Complete strict typing for `NumericInputs` and `CardDeck`
+- [x] Refactor UI to use Registry Pattern
+- [x] Extract complex component logic into custom hooks
+- [x] Standardize props interfaces across all sections
+- [x] Update documentation to reflect modern architecture
+- [ ] Add unit tests for `SummaryCompiler` edge cases
+- [ ] Optimize build size and transition performance

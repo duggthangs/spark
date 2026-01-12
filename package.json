@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "bun --hot ui/index.ts",
-    "build": "rm -rf ui/dist && bun build ui/index.html --outdir ui/dist",
+    "build": "rm -rf ui/dist && bun build ui/index.html --outdir ui/dist --entry-naming '[name].[ext]' --chunk-naming '[name].[ext]' --asset-naming '[name].[ext]'",
+    "build:cli": "bun run build && bun build cli/index.ts --compile --outfile iaee",
+    "install": "bun run build:cli && mkdir -p ~/bin && ln -sf $(pwd)/iaee ~/bin/iaee && echo 'Installed iaee to ~/bin/iaee'",
     "clean": "rm -rf ui/dist"
   },
   "devDependencies": {

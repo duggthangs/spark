@@ -1,7 +1,12 @@
-import { join } from "path";
 import { validateExperience } from "../engine/validator";
 import { compileSummary } from "../engine/compiler";
 import { openBrowser } from "./open-browser";
+
+// Embed assets at compile time - these become part of the binary
+// @ts-ignore - Bun's type definitions don't match runtime behavior
+import indexHtmlPath from "../ui/dist/index.html" with { type: "file" };
+// @ts-ignore - Bun's type definitions don't match runtime behavior
+import indexJsPath from "../ui/dist/index.js" with { type: "file" };
 
 const MAX_PORT_ATTEMPTS = 20;
 
@@ -69,7 +74,6 @@ export async function startServer(
   }
 
   const experienceData = validation.data;
-  const distDir = join(process.cwd(), "ui", "dist");
 
   // Try to start server, auto-incrementing port if needed
   let actualPort = port;
@@ -128,33 +132,25 @@ export async function startServer(
             }
           }
 
-          // Static Files
-          let path = url.pathname;
-          if (path === "/") path = "/index.html";
-
-          // Serve index.html with injection
-          if (path === "/index.html") {
-            const indexFile = Bun.file(join(distDir, "index.html"));
-            if (await indexFile.exists()) {
-              let content = await indexFile.text();
-              // Inject the runtime mode flag
-              content = content.replace(
-                "<head>",
-                "<head><script>window.IAEE_MODE = 'runtime';</script>"
-              );
-              return new Response(content, {
-                headers: { "Content-Type": "text/html" },
-              });
-            }
+          // Serve index.html with runtime mode injection
+          if (url.pathname === "/" || url.pathname === "/index.html") {
+            // @ts-ignore - Bun's type definitions are incorrect; indexHtmlPath is a string at runtime
+            let content = await Bun.file(indexHtmlPath).text();
+            content = content.replace(
+              "<head>",
+              "<head><script>window.IAEE_MODE = 'runtime';</script>"
+            );
+            return new Response(content, {
+              headers: { "Content-Type": "text/html" },
+            });
           }
 
-          // Other static assets
-          // Remove leading slash for join to work correctly with CWD path
-          const assetPath = join(distDir, path.substring(1)); 
-          const assetFile = Bun.file(assetPath);
-          
-          if (await assetFile.exists()) {
-            return new Response(assetFile);
+          // Serve embedded JS bundle
+          if (url.pathname === "/index.js") {
+            // @ts-ignore - Bun's type definitions are incorrect; indexJsPath is a string at runtime
+            return new Response(Bun.file(indexJsPath), {
+              headers: { "Content-Type": "application/javascript" },
+            });
           }
 
           return new Response("Not Found", { status: 404 });
@@ -192,11 +188,9 @@ export async function startServer(
     const localIP = await getLocalIP();
     if (localIP) {
       console.log(`IAEE CLI running at http://${localIP}:${actualPort}`);
-      console.log(`                      http://localhost:${actualPort}`);
     } else {
+      console.warn("Could not detect local IP address");
       console.log(`IAEE CLI running at http://0.0.0.0:${actualPort}`);
-      console.log(`                      http://localhost:${actualPort}`);
-      console.log("(Could not detect local IP address)");
     }
   } else {
     console.log(`IAEE CLI running at http://localhost:${actualPort}`);
