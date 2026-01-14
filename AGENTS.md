@@ -9,3 +9,7 @@ If you need information on a specific library, then Spock is your documentation 
 ## Journal
 
 If the user asks for any feature change, bug fix, or anything bigger than that, make sure to load the skill, `journal`
+
+## Exploring context, code, workflows, etc...
+
+If you need to find out how something works or how to do something, use th `code-explorer`. If you already know where to go and what to do exactly, then proceed.
