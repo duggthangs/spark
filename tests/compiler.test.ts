@@ -7,6 +7,7 @@ test("compiler: formats Info section correctly", () => {
     id: "test-001",
     title: "Test Experience",
     description: "Testing info formatting",
+    author: "Test Author",
     sections: [
       {
         id: "sec-info",
@@ -39,6 +40,7 @@ test("compiler: formats Choice section (single select)", () => {
   const experience: Experience = {
     id: "test-002",
     title: "Choice Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-choice",
@@ -74,6 +76,7 @@ test("compiler: formats Choice section (multi-select)", () => {
   const experience: Experience = {
     id: "test-003",
     title: "Multi-Choice Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-choice",
@@ -111,6 +114,7 @@ test("compiler: formats Kanban section", () => {
   const experience: Experience = {
     id: "test-004",
     title: "Kanban Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-kanban",
@@ -156,6 +160,7 @@ test("compiler: formats Image Choice section", () => {
   const experience: Experience = {
     id: "test-005",
     title: "Image Choice Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-image",
@@ -189,6 +194,7 @@ test("compiler: formats API Builder section", () => {
   const experience: Experience = {
     id: "test-006",
     title: "API Builder Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-api",
@@ -232,6 +238,7 @@ test("compiler: formats enhanced API Builder section with all fields", () => {
   const experience: Experience = {
     id: "test-006-enhanced",
     title: "Enhanced API Builder Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-api",
@@ -291,6 +298,7 @@ test("compiler: formats multi-endpoint API Builder section", () => {
   const experience: Experience = {
     id: "test-006-multi",
     title: "Multi-Endpoint API Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-api",
@@ -357,6 +365,7 @@ test("compiler: formats Data Mapper section", () => {
   const experience: Experience = {
     id: "test-007",
     title: "Data Mapper Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-mapper",
@@ -399,6 +408,7 @@ test("compiler: formats Decision section (approved)", () => {
   const experience: Experience = {
     id: "test-008",
     title: "Decision Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-decision",
@@ -424,6 +434,7 @@ test("compiler: formats Decision section (rejected)", () => {
   const experience: Experience = {
     id: "test-009",
     title: "Decision Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-decision",
@@ -447,6 +458,7 @@ test("compiler: formats Live Component section", () => {
   const experience: Experience = {
     id: "test-010",
     title: "Live Component Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-live",
@@ -480,6 +492,7 @@ test("compiler: formats Numeric Inputs section", () => {
   const experience: Experience = {
     id: "test-011",
     title: "Numeric Inputs Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-numeric",
@@ -517,6 +530,7 @@ test("compiler: formats Card Deck section", () => {
   const experience: Experience = {
     id: "test-012",
     title: "Card Deck Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-deck",
@@ -555,6 +569,7 @@ test("compiler: formats Rank section", () => {
   const experience: Experience = {
     id: "test-013",
     title: "Rank Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-rank",
@@ -591,6 +606,7 @@ test("compiler: formats Text Review section", () => {
   const experience: Experience = {
     id: "test-014",
     title: "Text Review Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-review",
@@ -623,6 +639,7 @@ test("compiler: handles missing/empty results gracefully", () => {
   const experience: Experience = {
     id: "test-015",
     title: "Empty Results Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-choice",
@@ -649,11 +666,490 @@ test("compiler: handles missing/empty results gracefully", () => {
   expect(markdown).toContain("*No selections*");
 });
 
+// ===== NEW VALUE FORMAT TESTS =====
+
+test("compiler: formats Choice section with new array format (single select)", () => {
+  const experience: Experience = {
+    id: "test-choice-new-single",
+    title: "Choice New Format Test",
+    author: "Test Author",
+    sections: [
+      {
+        id: "sec-choice",
+        type: "choice",
+        title: "Select Framework",
+        options: [
+          { id: "react", label: "React" },
+          { id: "vue", label: "Vue" },
+          { id: "svelte", label: "Svelte" },
+        ],
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  // New array format with selected flag
+  const results = {
+    "sec-choice": [
+      { id: "react", label: "React", selected: true },
+      { id: "vue", label: "Vue", selected: false },
+      { id: "svelte", label: "Svelte", selected: false },
+    ],
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("### Select Framework");
+  expect(markdown).toContain("- React (react)");
+  expect(markdown).not.toContain("- Vue");
+  expect(markdown).not.toContain("- Svelte");
+});
+
+test("compiler: formats Choice section with new array format (multi-select)", () => {
+  const experience: Experience = {
+    id: "test-choice-new-multi",
+    title: "Choice New Format Multi Test",
+    author: "Test Author",
+    sections: [
+      {
+        id: "sec-choice",
+        type: "choice",
+        title: "Select Technologies",
+        multiSelect: true,
+        options: [
+          { id: "react", label: "React" },
+          { id: "typescript", label: "TypeScript" },
+          { id: "tailwind", label: "Tailwind" },
+        ],
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  // New array format with multiple selected
+  const results = {
+    "sec-choice": [
+      { id: "react", label: "React", selected: true },
+      { id: "typescript", label: "TypeScript", selected: true },
+      { id: "tailwind", label: "Tailwind", selected: false },
+    ],
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("### Select Technologies");
+  expect(markdown).toContain("- React (react)");
+  expect(markdown).toContain("- TypeScript (typescript)");
+  expect(markdown).not.toContain("- Tailwind");
+});
+
+test("compiler: formats Choice section with custom-added options", () => {
+  const experience: Experience = {
+    id: "test-choice-custom",
+    title: "Choice Custom Options Test",
+    author: "Test Author",
+    sections: [
+      {
+        id: "sec-choice",
+        type: "choice",
+        title: "Select Framework",
+        multiSelect: true,
+        options: [
+          { id: "react", label: "React" },
+        ],
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  // Includes custom-added option not in original schema
+  const results = {
+    "sec-choice": [
+      { id: "react", label: "React", selected: true },
+      { id: "custom-123456", label: "My Custom Framework", selected: true },
+    ],
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("- React (react)");
+  expect(markdown).toContain("- My Custom Framework (custom-123456)");
+});
+
+test("compiler: formats Rank section with new array format", () => {
+  const experience: Experience = {
+    id: "test-rank-new",
+    title: "Rank New Format Test",
+    author: "Test Author",
+    sections: [
+      {
+        id: "sec-rank",
+        type: "rank",
+        title: "Prioritize Features",
+        items: [
+          { id: "search", label: "Search" },
+          { id: "export", label: "Export" },
+          { id: "auth", label: "Authentication" },
+        ],
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  // New array format - full objects in ranked order
+  const results = {
+    "sec-rank": [
+      { id: "auth", label: "Authentication" },
+      { id: "search", label: "Search" },
+      { id: "export", label: "Export" },
+    ],
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("### Prioritize Features");
+  expect(markdown).toContain("1. Authentication (auth)");
+  expect(markdown).toContain("2. Search (search)");
+  expect(markdown).toContain("3. Export (export)");
+});
+
+test("compiler: formats Rank section with custom-added items", () => {
+  const experience: Experience = {
+    id: "test-rank-custom",
+    title: "Rank Custom Items Test",
+    author: "Test Author",
+    sections: [
+      {
+        id: "sec-rank",
+        type: "rank",
+        title: "Prioritize Features",
+        items: [
+          { id: "search", label: "Search" },
+        ],
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  // Includes custom-added item
+  const results = {
+    "sec-rank": [
+      { id: "custom-789", label: "My Custom Priority" },
+      { id: "search", label: "Search" },
+    ],
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("1. My Custom Priority (custom-789)");
+  expect(markdown).toContain("2. Search (search)");
+});
+
+test("compiler: formats Numeric Inputs section with new array format", () => {
+  const experience: Experience = {
+    id: "test-numeric-new",
+    title: "Numeric New Format Test",
+    author: "Test Author",
+    sections: [
+      {
+        id: "sec-numeric",
+        type: "numeric-inputs",
+        title: "Budget Allocation",
+        items: [
+          { id: "feature-a", label: "Feature A", max: 100 },
+          { id: "feature-b", label: "Feature B" },
+        ],
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  // New array format with value inline
+  const results = {
+    "sec-numeric": [
+      { id: "feature-a", label: "Feature A", max: 100, value: 75 },
+      { id: "feature-b", label: "Feature B", value: 50 },
+    ],
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("### Budget Allocation");
+  expect(markdown).toContain("**Feature A:** 75 (max: 100)");
+  expect(markdown).toContain("**Feature B:** 50");
+  expect(markdown).toContain("**Total:** 125");
+});
+
+test("compiler: formats Numeric Inputs section with custom-added items", () => {
+  const experience: Experience = {
+    id: "test-numeric-custom",
+    title: "Numeric Custom Items Test",
+    author: "Test Author",
+    sections: [
+      {
+        id: "sec-numeric",
+        type: "numeric-inputs",
+        title: "Budget Allocation",
+        items: [
+          { id: "feature-a", label: "Feature A" },
+        ],
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  // Includes custom-added item
+  const results = {
+    "sec-numeric": [
+      { id: "feature-a", label: "Feature A", value: 50 },
+      { id: "custom-456", label: "R&D Budget", max: 200, value: 150 },
+    ],
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("**Feature A:** 50");
+  expect(markdown).toContain("**R&D Budget:** 150 (max: 200)");
+  expect(markdown).toContain("**Total:** 200");
+});
+
+// ===== EDGE CASE TESTS =====
+
+test("compiler: handles empty Choice array", () => {
+  const experience: Experience = {
+    id: "test-choice-empty",
+    title: "Empty Choice Test",
+    author: "Test Author",
+    sections: [
+      {
+        id: "sec-choice",
+        type: "choice",
+        title: "Select Option",
+        options: [{ id: "opt1", label: "Option 1" }],
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  const results = {
+    "sec-choice": [],
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("*No selections*");
+});
+
+test("compiler: handles empty Rank array", () => {
+  const experience: Experience = {
+    id: "test-rank-empty",
+    title: "Empty Rank Test",
+    author: "Test Author",
+    sections: [
+      {
+        id: "sec-rank",
+        type: "rank",
+        title: "Prioritize",
+        items: [{ id: "item1", label: "Item 1" }],
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  const results = {
+    "sec-rank": [],
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("*No rankings*");
+});
+
+test("compiler: handles empty Numeric Inputs array", () => {
+  const experience: Experience = {
+    id: "test-numeric-empty",
+    title: "Empty Numeric Test",
+    author: "Test Author",
+    sections: [
+      {
+        id: "sec-numeric",
+        type: "numeric-inputs",
+        title: "Budget",
+        items: [{ id: "item1", label: "Item 1" }],
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  // Empty array - should show no items
+  const results = {
+    "sec-numeric": [],
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  // Empty array means user deleted all items
+  expect(markdown).toContain("### Budget");
+  expect(markdown).toContain("*No items*");
+});
+
+test("compiler: handles Choice with all options selected", () => {
+  const experience: Experience = {
+    id: "test-choice-all",
+    title: "All Selected Test",
+    author: "Test Author",
+    sections: [
+      {
+        id: "sec-choice",
+        type: "choice",
+        title: "Select All",
+        multiSelect: true,
+        options: [
+          { id: "a", label: "A" },
+          { id: "b", label: "B" },
+          { id: "c", label: "C" },
+        ],
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  const results = {
+    "sec-choice": [
+      { id: "a", label: "A", selected: true },
+      { id: "b", label: "B", selected: true },
+      { id: "c", label: "C", selected: true },
+    ],
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("- A (a)");
+  expect(markdown).toContain("- B (b)");
+  expect(markdown).toContain("- C (c)");
+});
+
+test("compiler: handles Choice with none selected (new format)", () => {
+  const experience: Experience = {
+    id: "test-choice-none",
+    title: "None Selected Test",
+    author: "Test Author",
+    sections: [
+      {
+        id: "sec-choice",
+        type: "choice",
+        title: "Select Option",
+        options: [
+          { id: "a", label: "A" },
+          { id: "b", label: "B" },
+        ],
+      },
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  const results = {
+    "sec-choice": [
+      { id: "a", label: "A", selected: false },
+      { id: "b", label: "B", selected: false },
+    ],
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("*No selections*");
+});
+
+test("compiler: includes author in Markdown header", () => {
+  const experience: Experience = {
+    id: "test-author",
+    title: "My Experience",
+    author: "John Doe",
+    sections: [
+      {
+        id: "sec-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  const results = {
+    "sec-decision": true,
+  };
+
+  const markdown = compileSummary(experience, results);
+
+  expect(markdown).toContain("# My Experience");
+  expect(markdown).toContain("*By John Doe*");
+});
+
 test("compiler: generates complete summary with multiple sections", () => {
   const experience: Experience = {
     id: "test-016",
     title: "Complete Experience",
     description: "A comprehensive test with multiple section types",
+    author: "Test Author",
     sections: [
       {
         id: "sec-1",

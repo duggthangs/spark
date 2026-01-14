@@ -7,6 +7,7 @@ test("Layer 1: Simple InfoSection validates successfully", () => {
     id: "exp-001",
     title: "Test Experience",
     description: "A minimal test experience",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -39,6 +40,7 @@ test("Layer 1: Missing required content field fails validation", () => {
   const invalidExperience = {
     id: "exp-001",
     title: "Test Experience",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -61,6 +63,7 @@ test("Layer 1: Invalid section type fails validation", () => {
   const invalidExperience = {
     id: "exp-001",
     title: "Test Experience",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -82,6 +85,7 @@ test("Layer 1: Unknown fields are stripped (forward compatibility)", () => {
   const experienceWithUnknownFields = {
     id: "exp-001",
     title: "Test Experience",
+    author: "Test Author",
     unknownField: "should be stripped",
     sections: [
       {
@@ -115,6 +119,7 @@ test("Layer 2: Kitchen sink experience with all section types validates successf
     id: "exp-kitchen-sink",
     title: "All Section Types",
     description: "Testing all interactive section types",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -179,6 +184,7 @@ test("Layer 2: Choice section requires options array", () => {
   const invalidChoiceSection = {
     id: "exp-002",
     title: "Invalid Choice",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -201,6 +207,7 @@ test("Layer 2: Rank section requires items array", () => {
   const invalidRankSection = {
     id: "exp-003",
     title: "Invalid Rank",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -223,6 +230,7 @@ test("Layer 3: Experience without a DecisionSection fails validation", () => {
   const experienceWithoutDecision = {
     id: "exp-no-decision",
     title: "Missing Decision",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -255,6 +263,7 @@ test("Layer 3: Experience with multiple DecisionSections fails validation", () =
   const experienceWithMultipleDecisions = {
     id: "exp-multiple-decisions",
     title: "Multiple Decisions",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -295,6 +304,7 @@ test("Phase 1.5: Choice section with multiSelect and allowCustom validates succe
   const experience = {
     id: "exp-choice-extended",
     title: "Extended Choice",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -332,6 +342,7 @@ test("Phase 1.5: Kanban section validates successfully", () => {
   const experience = {
     id: "exp-kanban",
     title: "Kanban Prioritization",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -372,6 +383,7 @@ test("Phase 1.5: Image Choice section validates successfully", () => {
   const experience = {
     id: "exp-image-choice",
     title: "Design Review",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -408,6 +420,7 @@ test("Phase 1.5: API Builder section validates successfully", () => {
   const experience = {
     id: "exp-api-builder",
     title: "API Contract Builder",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -440,6 +453,7 @@ test("Phase 1.5: API Builder section validates with enhanced fields", () => {
   const experience = {
     id: "exp-api-builder-enhanced",
     title: "Enhanced API Builder",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -491,6 +505,7 @@ test("Phase 1.5: Data Mapper section validates successfully", () => {
   const experience = {
     id: "exp-data-mapper",
     title: "Data Mapping",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -529,6 +544,7 @@ test("Phase 1.5: Live Component section validates successfully", () => {
   const experience = {
     id: "exp-live-component",
     title: "Component Editor",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -559,6 +575,7 @@ test("Phase 1.5: Numeric Inputs section validates successfully", () => {
   const experience = {
     id: "exp-numeric-inputs",
     title: "Budget Allocator",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -595,6 +612,7 @@ test("Phase 1.5: Card Deck section validates successfully", () => {
   const experience = {
     id: "exp-card-deck",
     title: "Persona Selector",
+    author: "Test Author",
     sections: [
       {
         id: "section-001",
@@ -641,6 +659,7 @@ test("Phase 1.5: All new section types in a single experience validate successfu
   const comprehensiveExperience = {
     id: "exp-comprehensive",
     title: "Comprehensive Test",
+    author: "Test Author",
     sections: [
       {
         id: "sec-choice",
@@ -718,5 +737,49 @@ test("Phase 1.5: All new section types in a single experience validate successfu
     expect(types).toContain("numeric-inputs");
     expect(types).toContain("card-deck");
     expect(types).toContain("decision");
+  }
+});
+
+test("Experience with author field validates successfully", () => {
+  const experience = {
+    id: "exp-author",
+    title: "Experience with Author",
+    author: "Jane Doe",
+    sections: [
+      {
+        id: "section-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  const result = validateExperience(experience);
+
+  expect(result.success).toBe(true);
+  if (result.success) {
+    expect(result.data.author).toBe("Jane Doe");
+  }
+});
+
+test("Experience without author field fails validation", () => {
+  const experience = {
+    id: "exp-no-author",
+    title: "Experience without Author",
+    // No author field
+    sections: [
+      {
+        id: "section-decision",
+        type: "decision",
+        title: "Decision",
+      },
+    ],
+  };
+
+  const result = validateExperience(experience);
+
+  expect(result.success).toBe(false);
+  if (!result.success) {
+    expect(result.errors.issues.length).toBeGreaterThan(0);
   }
 });
