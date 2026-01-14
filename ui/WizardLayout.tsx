@@ -11,6 +11,7 @@ interface WizardLayoutProps {
   totalSteps: number;
   title?: string;
   subtitle?: string;
+  author?: string;
   onNext?: () => void;
   onBack?: () => void;
   canGoNext?: boolean;
@@ -27,6 +28,7 @@ export default function WizardLayout({
   totalSteps,
   title,
   subtitle,
+  author,
   onNext,
   onBack,
   canGoNext = true,
@@ -54,6 +56,7 @@ export default function WizardLayout({
         <div>
           {title && <h1 className="text-xl font-semibold tracking-tight text-slate-900">{title}</h1>}
           {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
+          {author && <p className="text-xs text-slate-400 mt-1">by {author}</p>}
         </div>
         <div className="text-xs font-medium text-slate-400 uppercase tracking-wider">
           Step {currentStep + 1} of {totalSteps}

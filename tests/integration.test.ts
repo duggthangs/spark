@@ -7,6 +7,7 @@ test("integration: compiler produces valid Markdown with demo experience", () =>
     id: "demo-exp-1",
     title: "CLI Runtime Demo",
     description: "Testing the runtime mode.",
+    author: "Test Author",
     sections: [
       {
         id: "sec-1",

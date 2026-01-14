@@ -228,6 +228,7 @@ export const ExperienceSchema = z
     id: z.string(),
     title: z.string(),
     description: z.string().optional(),
+    author: z.string(),
     sections: z.array(SectionSchema),
   })
   .refine(

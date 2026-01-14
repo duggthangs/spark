@@ -221,6 +221,7 @@ export default function App() {
           totalSteps={totalSteps}
           title={experience?.title}
           subtitle={experience?.subtitle}
+          author={experience?.author}
           onNext={handleNext}
           onBack={handleBack}
           canGoBack={currentStepIndex > 0}

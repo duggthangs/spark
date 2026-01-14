@@ -4,6 +4,7 @@ export const MOCK_EXPERIENCE: Experience = {
   id: "demo-experience",
   title: "IAEE Prototype",
   description: "Production-ready integration test",
+  author: "Spark Team",
   sections: [
     { 
       id: "intro", 
