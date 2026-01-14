@@ -55,6 +55,7 @@ function formatInfoSection(section: InfoSection): string {
 
 /**
  * Format a Choice section (single or multi-select).
+ * Supports both legacy formats (string/string[]) and new format (ChoiceOption[]).
  */
 function formatChoiceSection(section: ChoiceSection, result: any): string {
   const lines: string[] = [];
@@ -65,29 +66,36 @@ function formatChoiceSection(section: ChoiceSection, result: any): string {
 
   lines.push("");
 
-  // Get selected IDs
-  const selectedIds = Array.isArray(result) ? result : result ? [result] : [];
+  // Normalize result to get selected items
+  let selectedItems: Array<{ id: string; label: string }> = [];
 
-  if (selectedIds.length === 0) {
+  if (Array.isArray(result) && result.length > 0) {
+    // Check if it's the new format (array of objects with id/label/selected)
+    if (typeof result[0] === 'object' && 'id' in result[0]) {
+      // New format: filter to only selected options
+      selectedItems = (result as Array<{ id: string; label: string; selected?: boolean }>)
+        .filter(opt => opt.selected)
+        .map(opt => ({ id: opt.id, label: opt.label }));
+    } else {
+      // Legacy format: string[] of selected IDs
+      selectedItems = (result as string[]).map(id => {
+        const option = section.options?.find((opt) => opt.id === id);
+        return option ? { id: option.id, label: option.label } : { id, label: id };
+      });
+    }
+  } else if (typeof result === 'string' && result) {
+    // Legacy single-select format: just the ID
+    const option = section.options?.find((opt) => opt.id === result);
+    selectedItems = option 
+      ? [{ id: option.id, label: option.label }] 
+      : [{ id: result, label: result }];
+  }
+
+  if (selectedItems.length === 0) {
     lines.push("*No selections*");
   } else {
-    // Map IDs to labels
-    const selections = selectedIds
-      .map((id: string) => {
-        const option = section.options?.find((opt) => opt.id === id);
-        if (option) {
-          return `- ${option.label} (${option.id})`;
-        }
-        // Handle custom additions
-        return `- ${id}`;
-      })
-      .filter(Boolean);
-
-    if (selections.length > 0) {
-      lines.push(selections.join("\n"));
-    } else {
-      lines.push("*No valid selections*");
-    }
+    const selections = selectedItems.map(item => `- ${item.label} (${item.id})`);
+    lines.push(selections.join("\n"));
   }
 
   lines.push("");
@@ -96,6 +104,7 @@ function formatChoiceSection(section: ChoiceSection, result: any): string {
 
 /**
  * Format a Rank section (ordered items).
+ * Supports both legacy format (string[]) and new format (RankItem[]).
  */
 function formatRankSection(section: RankSection, result: any): string {
   const lines: string[] = [];
@@ -106,16 +115,31 @@ function formatRankSection(section: RankSection, result: any): string {
 
   lines.push("");
 
-  const rankedIds = Array.isArray(result) ? result : [];
+  // Normalize result to get ranked items
+  let rankedItems: Array<{ id: string; label: string }> = [];
 
-  if (rankedIds.length === 0) {
+  if (Array.isArray(result) && result.length > 0) {
+    // Check if it's the new format (array of objects with id/label)
+    if (typeof result[0] === 'object' && 'id' in result[0]) {
+      // New format: array already contains full item data in order
+      rankedItems = (result as Array<{ id: string; label: string }>).map(item => ({
+        id: item.id,
+        label: item.label,
+      }));
+    } else {
+      // Legacy format: string[] of IDs in order
+      rankedItems = (result as string[]).map(id => {
+        const item = section.items?.find((i) => i.id === id);
+        return item ? { id: item.id, label: item.label } : { id, label: id };
+      });
+    }
+  }
+
+  if (rankedItems.length === 0) {
     lines.push("*No rankings*");
   } else {
-    rankedIds.forEach((id: string, index: number) => {
-      const item = section.items?.find((i) => i.id === id);
-      if (item) {
-        lines.push(`${index + 1}. ${item.label} (${item.id})`);
-      }
+    rankedItems.forEach((item, index) => {
+      lines.push(`${index + 1}. ${item.label} (${item.id})`);
     });
   }
 
@@ -541,6 +565,7 @@ function formatLiveComponentSection(section: LiveComponentSection, result: any):
 
 /**
  * Format a Numeric Inputs section.
+ * Supports both legacy format ({ __items__: [...], itemId: number }) and new array format.
  */
 function formatNumericInputsSection(section: NumericInputsSection, result: any): string {
   const lines: string[] = [];
@@ -551,15 +576,40 @@ function formatNumericInputsSection(section: NumericInputsSection, result: any):
 
   lines.push("");
 
-  if (!result || typeof result !== "object") {
+  if (!result) {
     lines.push("*No values provided*");
     lines.push("");
     return lines.join("\n");
   }
 
-  // Get items from result.__items__ (dynamic) or fall back to section.items (static)
-  const items: Array<{ id: string; label: string; max?: number }> = 
-    Array.isArray(result.__items__) ? result.__items__ : (section.items || []);
+  // Normalize to get items with values
+  let items: Array<{ id: string; label: string; max?: number; value: number }> = [];
+
+  // Check for new array format (including empty array)
+  if (Array.isArray(result)) {
+    if (result.length > 0 && typeof result[0] === 'object' && 'id' in result[0]) {
+      items = (result as Array<{ id: string; label: string; max?: number; value?: number }>).map(item => ({
+        id: item.id,
+        label: item.label,
+        max: item.max,
+        value: item.value ?? 0,
+      }));
+    }
+    // Empty array = user deleted all items
+    // items stays empty
+  } 
+  // Legacy format: { __items__: [...], itemId: number }
+  else if (typeof result === 'object') {
+    const legacyItems: Array<{ id: string; label: string; max?: number }> = 
+      Array.isArray(result.__items__) ? result.__items__ : (section.items || []);
+    
+    items = legacyItems.map(item => ({
+      id: item.id,
+      label: item.label,
+      max: item.max,
+      value: typeof result[item.id] === 'number' ? result[item.id] : 0,
+    }));
+  }
 
   if (items.length === 0) {
     lines.push("*No items*");
@@ -571,10 +621,8 @@ function formatNumericInputsSection(section: NumericInputsSection, result: any):
   let total = 0;
 
   items.forEach((item) => {
-    const value = result[item.id];
-    const numValue = typeof value === "number" ? value : 0;
-    total += numValue;
-    const displayValue = typeof value === "number" ? value.toLocaleString() : "-";
+    total += item.value;
+    const displayValue = item.value.toLocaleString();
     lines.push(`- **${item.label}:** ${displayValue}${item.max ? ` (max: ${item.max.toLocaleString()})` : ""}`);
   });
 
@@ -734,6 +782,11 @@ export function compileSummary(
   // Header
   lines.push(`# ${experience.title}`);
   lines.push("");
+
+  if (experience.author) {
+    lines.push(`*By ${experience.author}*`);
+    lines.push("");
+  }
 
   if (experience.description) {
     lines.push(experience.description);

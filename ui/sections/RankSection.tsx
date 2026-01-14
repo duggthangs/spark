@@ -1,14 +1,38 @@
-import React, { useEffect } from 'react';
-import { GripVertical } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { GripVertical, Plus, Trash2, X } from 'lucide-react';
 import { useDragReorder } from '../hooks/useDragReorder';
 import type { RankSection as RankSectionType } from '../../engine/schema';
 
+interface RankItem {
+  id: string;
+  label: string;
+}
+
 export default function RankSection({ data, value, onChange }: { data: RankSectionType, value?: any, onChange?: (val: any) => void }) {
-  // Safe default: if value is missing, use all item IDs from data
-  const items: string[] = Array.isArray(value) ? value : data.items?.map(i => i.id) || [];
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newLabel, setNewLabel] = useState('');
+
+  // Normalize value: support both legacy string[] and new RankItem[] formats
+  const normalizeItems = (): RankItem[] => {
+    if (!value) return [];
+    if (Array.isArray(value) && value.length > 0) {
+      // Check if it's the new format (objects with id/label)
+      if (typeof value[0] === 'object' && 'id' in value[0]) {
+        return value as RankItem[];
+      }
+      // Legacy format: string[] of IDs - convert using data.items
+      return (value as string[]).map(id => {
+        const found = data.items?.find(i => i.id === id);
+        return found || { id, label: id };
+      });
+    }
+    return [];
+  };
+
+  const items: RankItem[] = normalizeItems();
   
   // Guard for onChange to satisfy hooks
-  const safeOnChange = (val: any) => onChange?.(val);
+  const safeOnChange = (val: RankItem[]) => onChange?.(val);
 
   const {
     getDragProps,
@@ -21,13 +45,31 @@ export default function RankSection({ data, value, onChange }: { data: RankSecti
 
   useEffect(() => {
     if (!value && data.items) {
-      safeOnChange(data.items.map(i => i.id));
+      // Initialize with data.items as full objects
+      safeOnChange(data.items.map(i => ({ id: i.id, label: i.label })));
     }
   }, []);
 
+  // Add a new item
+  const handleAdd = () => {
+    if (!newLabel.trim()) return;
+    const newItem: RankItem = {
+      id: `custom-${Date.now()}`,
+      label: newLabel.trim(),
+    };
+    safeOnChange([...items, newItem]);
+    setNewLabel('');
+    setShowAddForm(false);
+  };
+
+  // Delete an item
+  const handleDelete = (id: string) => {
+    safeOnChange(items.filter(item => item.id !== id));
+  };
+
   // Arrow-based move (accessibility fallback)
   const move = (id: string, dir: number) => {
-    const idx = items.indexOf(id);
+    const idx = items.findIndex(item => item.id === id);
     if (idx === -1) return;
     const newIdx = idx + dir;
     if (newIdx < 0 || newIdx >= items.length) return;
@@ -48,14 +90,11 @@ export default function RankSection({ data, value, onChange }: { data: RankSecti
       {data.description && <p className="text-slate-500 mb-8">{data.description}</p>}
       
       <div className="space-y-3">
-        {items.map((itemId: string, index: number) => {
-          const item = data.items.find(i => i.id === itemId);
-          if (!item) return null;
-
+        {items.map((item: RankItem, index: number) => {
           return (
             <div 
               key={item.id} 
-              className="relative"
+              className="relative group"
               {...getDropZoneProps(index)}
             >
               {/* Drop indicator line - appears above the target item */}
@@ -65,7 +104,7 @@ export default function RankSection({ data, value, onChange }: { data: RankSecti
               
               <div 
                 {...getDragProps(index)}
-                className={`flex items-center gap-4 bg-white p-4 rounded-xl border-2 shadow-sm group transition-all duration-150 ${
+                className={`flex items-center gap-4 bg-white p-4 rounded-xl border-2 shadow-sm transition-all duration-150 ${
                   isDragging(index) 
                     ? 'opacity-50 border-blue-300 scale-[0.98]' 
                     : 'border-slate-100 cursor-grab active:cursor-grabbing'
@@ -82,7 +121,7 @@ export default function RankSection({ data, value, onChange }: { data: RankSecti
                 {/* Label */}
                 <span className="flex-1 font-medium text-slate-700">{item.label}</span>
                 
-                {/* Arrow buttons - hover only (accessibility fallback) */}
+                {/* Action buttons - hover only */}
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button 
                     onClick={() => move(item.id, -1)}
@@ -100,6 +139,13 @@ export default function RankSection({ data, value, onChange }: { data: RankSecti
                   >
                     ↓
                   </button>
+                  <button 
+                    onClick={() => handleDelete(item.id)}
+                    className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete item"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -114,6 +160,66 @@ export default function RankSection({ data, value, onChange }: { data: RankSecti
           >
             Drop here to move to last
           </div>
+        )}
+
+        {/* Add Item Form */}
+        {showAddForm ? (
+          <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 bg-slate-50">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1">
+                  Item Label
+                </label>
+                <input
+                  type="text"
+                  value={newLabel}
+                  onChange={(e) => setNewLabel(e.target.value)}
+                  placeholder="e.g., New priority item"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAdd();
+                    if (e.key === 'Escape') {
+                      setShowAddForm(false);
+                      setNewLabel('');
+                    }
+                  }}
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  onClick={handleAdd}
+                  disabled={!newLabel.trim()}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                    newLabel.trim()
+                      ? 'bg-slate-900 text-white hover:bg-slate-800'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  <Plus className="w-4 h-4" />
+                  Add
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setNewLabel('');
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm text-slate-600 hover:bg-slate-100 transition-all"
+                >
+                  <X className="w-4 h-4" />
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="w-full py-3 flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 hover:border-slate-300 text-sm font-medium transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            Add Item
+          </button>
         )}
       </div>
     </div>

@@ -5,28 +5,20 @@ interface NumericInputItem {
   id: string;
   label: string;
   max?: number;
+  value?: number;
 }
 
 interface NumericInputsData {
   id: string;
   title?: string;
   description?: string;
-  items: NumericInputItem[];
-}
-
-// Value is a flat record of id -> value
-// But we also need to track item metadata for user-added items
-// So we store: { __items__: [...], itemId: number, ... }
-// The __items__ key holds metadata, other keys are values
-interface NumericInputsValue {
-  __items__?: NumericInputItem[];
-  [key: string]: number | NumericInputItem[] | undefined;
+  items: Array<{ id: string; label: string; max?: number }>;
 }
 
 interface Props {
   data: NumericInputsData;
-  value?: NumericInputsValue;
-  onChange?: (val: NumericInputsValue) => void;
+  value?: NumericInputItem[];
+  onChange?: (val: NumericInputItem[]) => void;
 }
 
 // Regex to validate numeric input (allows empty, integers, decimals)
@@ -40,25 +32,51 @@ export default function NumericInputsSection({ data, value, onChange }: Props) {
   // Track display values as strings for better UX (allows empty input)
   const [displayValues, setDisplayValues] = useState<Record<string, string>>({});
 
-  // Get items from value.__items__ or fall back to data.items
-  const items: NumericInputItem[] = value?.__items__ || data.items || [];
+  // Normalize value: support both legacy format and new array format
+  const normalizeItems = (): NumericInputItem[] => {
+    // New format: array of objects with value inline
+    if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && 'id' in value[0]) {
+      return value as NumericInputItem[];
+    }
+
+    // Legacy format: { __items__: [...], itemId: number }
+    if (value && typeof value === 'object' && '__items__' in (value as any)) {
+      const legacyValue = value as any;
+      const items = legacyValue.__items__ || [];
+      return items.map((item: any) => ({
+        id: item.id,
+        label: item.label,
+        max: item.max,
+        value: typeof legacyValue[item.id] === 'number' ? legacyValue[item.id] : 0,
+      }));
+    }
+
+    // No value yet - return empty
+    return [];
+  };
+
+  const items: NumericInputItem[] = normalizeItems();
+
+  // Guard for onChange
+  const safeOnChange = (val: NumericInputItem[]) => onChange?.(val);
 
   // Initialize on mount
   useEffect(() => {
-    if (!value && onChange) {
-      const initialItems = data.items || [];
-      const initialValue: NumericInputsValue = {
-        __items__: initialItems,
-      };
+    if (!value && data.items) {
+      const initialItems = data.items.map(item => ({
+        id: item.id,
+        label: item.label,
+        max: item.max,
+        value: 0,
+      }));
       const initialDisplay: Record<string, string> = {};
       initialItems.forEach(item => {
-        initialValue[item.id] = 0;
         initialDisplay[item.id] = '';
       });
       setDisplayValues(initialDisplay);
-      onChange(initialValue);
+      safeOnChange(initialItems);
     }
-  }, [value, onChange, data.items]);
+  }, []);
 
   // Sync display values when items change (e.g., after add)
   useEffect(() => {
@@ -71,12 +89,12 @@ export default function NumericInputsSection({ data, value, onChange }: Props) {
       });
       return updated;
     });
-  }, [items]);
+  }, [items.length]);
 
   // Get numeric value for an item
   const getValue = (itemId: string): number => {
-    const val = value?.[itemId];
-    return typeof val === 'number' ? val : 0;
+    const item = items.find(i => i.id === itemId);
+    return item?.value ?? 0;
   };
 
   // Get display value (string) for an item
@@ -92,30 +110,20 @@ export default function NumericInputsSection({ data, value, onChange }: Props) {
       
       // Convert to number for the actual value (empty = 0)
       const numValue = inputValue === '' ? 0 : parseFloat(inputValue) || 0;
-      onChange?.({
-        ...value,
-        [itemId]: numValue,
-      });
+      safeOnChange(items.map(item => 
+        item.id === itemId ? { ...item, value: numValue } : item
+      ));
     }
   };
 
   // Delete an item
   const handleDelete = (itemId: string) => {
-    const newItems = items.filter(item => item.id !== itemId);
-    const newValue: NumericInputsValue = {
-      __items__: newItems,
-    };
-    // Copy over values for remaining items
-    newItems.forEach(item => {
-      newValue[item.id] = getValue(item.id);
-    });
-    // Clean up display values
     setDisplayValues(prev => {
       const updated = { ...prev };
       delete updated[itemId];
       return updated;
     });
-    onChange?.(newValue);
+    safeOnChange(items.filter(item => item.id !== itemId));
   };
 
   // Add a new item
@@ -126,24 +134,18 @@ export default function NumericInputsSection({ data, value, onChange }: Props) {
       id: `custom-${Date.now()}`,
       label: newLabel.trim(),
       max: newMax ? parseFloat(newMax) : undefined,
-    };
-
-    const newItems = [...items, newItem];
-    const newValue: NumericInputsValue = {
-      ...value,
-      __items__: newItems,
-      [newItem.id]: 0,
+      value: 0,
     };
 
     setDisplayValues(prev => ({ ...prev, [newItem.id]: '' }));
-    onChange?.(newValue);
+    safeOnChange([...items, newItem]);
     setNewLabel('');
     setNewMax('');
     setShowAddForm(false);
   };
 
-  // Calculate total (exclude __items__ from sum)
-  const total = items.reduce((sum, item) => sum + getValue(item.id), 0);
+  // Calculate total
+  const total = items.reduce((sum, item) => sum + (item.value ?? 0), 0);
 
   // Format number with locale separators
   const formatNumber = (num: number) => {
@@ -161,7 +163,7 @@ export default function NumericInputsSection({ data, value, onChange }: Props) {
       {/* Input Fields */}
       <div className="space-y-4">
         {items.map((item) => {
-          const itemValue = getValue(item.id);
+          const itemValue = item.value ?? 0;
           const exceedsMax = item.max !== undefined && itemValue > item.max;
 
           return (
@@ -219,6 +221,14 @@ export default function NumericInputsSection({ data, value, onChange }: Props) {
                   placeholder="e.g., Research & Development"
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleAdd();
+                    if (e.key === 'Escape') {
+                      setShowAddForm(false);
+                      setNewLabel('');
+                      setNewMax('');
+                    }
+                  }}
                 />
               </div>
               <div>
